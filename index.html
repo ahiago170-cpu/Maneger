@@ -8,7 +8,7 @@
 body {
   font-family: Arial;
   text-align: center;
-  background: #f5f5f5; /* branco */
+  background: #f5f5f5;
   color: #111;
 }
 
@@ -44,7 +44,7 @@ body {
 
 .horarios {
   position: absolute;
-  bottom: 5px;   /* fica no rodapé */
+  bottom: 5px;
   left: 5px;
   right: 5px;
   font-size: 12px;
@@ -102,50 +102,51 @@ async function atualizar() {
     let extra = 0;
     let quadra = 0;
 
-    let listaIntegral = [];
-    let listaExtra = [];
-    let listaQuadra = [];
+    let listaIntegral = new Set();
+    let listaExtra = new Set();
+    let listaQuadra = new Set();
 
-   dados.forEach(item => {
-  const segmento = item.segmento;
-  const sala = item.sala;
-  const inicio = item.inicio;
-  const fim = item.fim;
+    dados.forEach(item => {
+      const segmento = item.segmento;
+      const inicio = item.inicio;
+      const fim = item.fim;
 
-  const texto =  inicio + " - " + fim ;
+      if (!inicio || !fim) return;
 
-  if (segmento === "integral") {
-    integral++;
-    listaIntegral.push(texto);
-  }
+      const texto = inicio + " - " + fim;
 
-  if (segmento === "extra") {
-    extra++;
-    listaExtra.push(texto);
-  }
+      if (segmento === "integral") {
+        integral++;
+        listaIntegral.add(texto);
+      }
 
-  if (segmento === "quadra") {
-    quadra++;
-    listaQuadra.push(texto);
-  }
-});
+      if (segmento === "extra") {
+        extra++;
+        listaExtra.add(texto);
+      }
+
+      if (segmento === "quadra") {
+        quadra++;
+        listaQuadra.add(texto);
+      }
+    });
 
     // bolinhas
     gerarAlunos("integral", integral, "integral");
     gerarAlunos("extra", extra, "extra");
     gerarAlunos("quadra", quadra, "extra");
 
-    // listas
+    // horários (rodapé)
     document.getElementById("hIntegral").innerHTML =
-      listaIntegral.map(i => "• " + i).join("<br>");
+      [...listaIntegral].join("<br>");
 
     document.getElementById("hExtra").innerHTML =
-      listaExtra.map(i => "• " + i).join("<br>");
+      [...listaExtra].join("<br>");
 
     document.getElementById("hQuadra").innerHTML =
-      listaQuadra.map(i => "• " + i).join("<br>");
+      [...listaQuadra].join("<br>");
 
-    // hora
+    // hora atual
     const agora = new Date();
     document.getElementById("hora").innerText =
       agora.getHours() + ":" + String(agora.getMinutes()).padStart(2, '0');
