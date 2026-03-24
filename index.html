@@ -98,11 +98,12 @@ async function atualizar() {
     dados.forEach(item => {
   const segmento = (item.segmento || "").toLowerCase().trim();
   const nome = item.aluno || "Sem nome";
+  const curso = item.curso || "";
   const inicio = item.inicio;
   const fim = item.fim;
 
   const horario = (inicio && fim) ? inicio + " - " + fim : "";
-  const texto = horario ? nome + " (" + horario + ")" : nome;
+  const texto = horario ? "👤 " + nome + " (" + horario + ")" : "👤 " + nome;
 
   if (segmento.includes("integral")) {
     nomesIntegral.push(texto);
