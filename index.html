@@ -15,43 +15,26 @@ body {
 .area {
   display: inline-block;
   width: 260px;
-  height: 250px;
+  height: 300px;
   margin: 10px;
   border: 2px solid #333;
-  position: relative;
   border-radius: 10px;
   background: white;
-  padding-top: 20px;
+  position: relative;
 }
 
 .titulo {
-  position: absolute;
-  top: -20px;
-  left: 10px;
-  background: #f5f5f5;
-  padding: 2px 5px;
   font-weight: bold;
+  padding: 5px;
+  background: #eee;
 }
 
 .lista {
-  position: absolute;
-  top: 20px;
-  bottom: 40px;
-  left: 5px;
-  right: 5px;
+  height: 240px;
   overflow-y: auto;
   text-align: left;
-  font-size: 13px;
-}
-
-.horarios {
-  position: absolute;
-  bottom: 5px;
-  left: 5px;
-  right: 5px;
-  font-size: 12px;
-  text-align: center;
-  font-weight: bold;
+  padding: 5px;
+  font-size: 14px;
 }
 </style>
 </head>
@@ -64,78 +47,65 @@ body {
 <div class="area">
   <div class="titulo">Integral</div>
   <div class="lista" id="listaIntegral"></div>
-  <div class="horarios" id="hIntegral"></div>
 </div>
 
 <div class="area">
   <div class="titulo">Extra</div>
   <div class="lista" id="listaExtra"></div>
-  <div class="horarios" id="hExtra"></div>
 </div>
 
 <div class="area">
   <div class="titulo">Quadra</div>
   <div class="lista" id="listaQuadra"></div>
-  <div class="horarios" id="hQuadra"></div>
 </div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbysFSKVqnrMYv31PzNgxqjbjKxcOGJcSVMm0OSxkrGj-oRVoQn5wi9A5iZ7vk5d8SMh/exec";
+const URL = "https://script.google.com/macros/s/AKfycbxz6iVyOnNS_ZOZ0HspqlQXXVJQlVQJZsWiGfXQKv8TEGFS-zHoOGjDTWXagjbR6yqF/exec";
 
 async function atualizar() {
   try {
     const resposta = await fetch(URL);
     const dados = await resposta.json();
 
-    let nomesIntegral = [];
-    let nomesExtra = [];
-    let nomesQuadra = [];
-
-    let horariosIntegral = new Set();
-    let horariosExtra = new Set();
-    let horariosQuadra = new Set();
+    let integral = [];
+    let extra = [];
+    let quadra = [];
 
     dados.forEach(item => {
-  const segmento = (item.segmento || "").toLowerCase().trim();
-  const nome = item.aluno || "Sem nome";
-  const curso = item.curso || "";
-  const inicio = item.inicio;
-  const fim = item.fim;
+      const segmento = (item.segmento || "").toLowerCase().trim();
+      const nome = item.aluno || "Sem nome";
+      const curso = item.curso || "";
+      const inicio = item.inicio;
+      const fim = item.fim;
 
-  const horario = (inicio && fim) ? inicio + " - " + fim : "";
-  const texto = horario ? "👤 " + nome + " (" + horario + ")" : "👤 " + nome;
+      let texto = "👤 " + nome;
 
-  if (segmento.includes("integral")) {
-    nomesIntegral.push(texto);
-  }
+      if (curso) {
+        texto += " - " + curso;
+      }
 
-  if (segmento.includes("extra")) {
-    nomesExtra.push(texto);
-  }
+      if (inicio && fim) {
+        texto += " (" + inicio + " - " + fim + ")";
+      }
 
-  if (segmento.includes("quadra")) {
-    nomesQuadra.push(texto);
-  }
-});
+      if (segmento === "integral") {
+        integral.push(texto);
+      }
 
-    document.getElementById("listaIntegral").innerHTML =
-      nomesIntegral.map(n => "• " + n).join("<br>");
+      if (segmento === "extra") {
+        extra.push(texto);
+      }
 
-    document.getElementById("listaExtra").innerHTML =
-      nomesExtra.map(n => "• " + n).join("<br>");
+      if (segmento === "quadra") {
+        quadra.push(texto);
+      }
+    });
 
-    document.getElementById("listaQuadra").innerHTML =
-      nomesQuadra.map(n => "• " + n).join("<br>");
+    document.getElementById("listaIntegral").innerHTML = integral.join("<br>");
+    document.getElementById("listaExtra").innerHTML = extra.join("<br>");
+    document.getElementById("listaQuadra").innerHTML = quadra.join("<br>");
 
-    document.getElementById("hIntegral").innerHTML =
-      [...horariosIntegral].join("<br>");
-
-    document.getElementById("hExtra").innerHTML =
-      [...horariosExtra].join("<br>");
-
-    document.getElementById("hQuadra").innerHTML =
-      [...horariosQuadra].join("<br>");
-
+    // relógio
     const agora = new Date();
     document.getElementById("hora").innerText =
       agora.getHours() + ":" + String(agora.getMinutes()).padStart(2, '0');
