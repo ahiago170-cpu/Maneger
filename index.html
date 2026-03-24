@@ -1,56 +1,56 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Painel de Alunos</title>
+<meta charset="UTF-8">
+<title>Painel de Alunos</title>
 
-  <style>
-    body {
-      font-family: Arial;
-      text-align: center;
-      background: #111;
-      color: white;
-    }
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #111;
+  color: white;
+}
 
-    h1 {
-      margin: 10px;
-    }
+.area {
+  display: inline-block;
+  width: 220px;
+  height: 180px;
+  margin: 10px;
+  border: 2px solid #fff;
+  position: relative;
+  border-radius: 10px;
+}
 
-    .area {
-      display: inline-block;
-      width: 200px;
-      height: 150px;
-      margin: 10px;
-      border: 2px solid #fff;
-      position: relative;
-      border-radius: 10px;
-    }
+.titulo {
+  position: absolute;
+  top: -20px;
+  left: 10px;
+  background: #111;
+  padding: 2px 5px;
+}
 
-    .titulo {
-      position: absolute;
-      top: -20px;
-      left: 10px;
-      background: #111;
-      padding: 2px 5px;
-      font-size: 14px;
-    }
+.aluno {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  position: absolute;
+}
 
-    .aluno {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      position: absolute;
-    }
+.integral { background: #00ff88; }
+.extra { background: #ffaa00; }
 
-    .integral {
-      background: #00ff88;
-    }
-
-    .extra {
-      background: #ffaa00;
-    }
-  </style>
+.horarios {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  right: 5px;
+  font-size: 10px;
+  text-align: left;
+}
+</style>
 </head>
+
 <body>
 
 <h1>Painel de Alunos</h1>
@@ -58,20 +58,22 @@
 
 <div class="area" id="integral">
   <div class="titulo">Integral</div>
+  <div class="horarios" id="hIntegral"></div>
 </div>
 
 <div class="area" id="extra">
   <div class="titulo">Extra</div>
+  <div class="horarios" id="hExtra"></div>
 </div>
 
 <div class="area" id="quadra">
   <div class="titulo">Quadra</div>
+  <div class="horarios" id="hQuadra"></div>
 </div>
 
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbwy9dZLj2DgqANdGgrI5YbUhfZkgRY_F3vegXDr1MWSSUrxqJrKhiDV2_RJQi4Ub9_r/exec";
 
-// cria bolinhas
 function gerarAlunos(containerId, quantidade, tipo) {
   const container = document.getElementById(containerId);
   container.querySelectorAll('.aluno').forEach(e => e.remove());
@@ -81,7 +83,7 @@ function gerarAlunos(containerId, quantidade, tipo) {
     aluno.classList.add('aluno', tipo);
 
     aluno.style.left = Math.random() * 180 + "px";
-    aluno.style.top = Math.random() * 130 + "px";
+    aluno.style.top = Math.random() * 120 + "px";
 
     container.appendChild(aluno);
   }
@@ -96,22 +98,29 @@ async function atualizar() {
     let extra = 0;
     let quadra = 0;
 
+    let horariosIntegral = new Set();
+    let horariosExtra = new Set();
+    let horariosQuadra = new Set();
+
     dados.forEach(item => {
       const turma = (item.turma || "").toLowerCase().trim();
       const curso = (item.curso || "").toLowerCase().trim();
       const sala  = (item.sala || "").toLowerCase().trim();
-      
+      const horario = item.horario;
 
       if (curso.includes("integral") || turma.includes("integral")) {
         integral++;
+        horariosIntegral.add(horario);
       }
 
       if (turma.includes("extra")) {
         extra++;
+        horariosExtra.add(horario);
       }
 
       if (sala.includes("quadra")) {
         quadra++;
+        horariosQuadra.add(horario);
       }
     });
 
@@ -119,6 +128,17 @@ async function atualizar() {
     gerarAlunos("extra", extra, "extra");
     gerarAlunos("quadra", quadra, "extra");
 
+    // mostrar horários
+    document.getElementById("hIntegral").innerText =
+      "Horários: " + [...horariosIntegral].join(", ");
+
+    document.getElementById("hExtra").innerText =
+      "Horários: " + [...horariosExtra].join(", ");
+
+    document.getElementById("hQuadra").innerText =
+      "Horários: " + [...horariosQuadra].join(", ");
+
+    // hora atual
     const agora = new Date();
     document.getElementById("hora").innerText =
       agora.getHours() + ":" + String(agora.getMinutes()).padStart(2, '0');
