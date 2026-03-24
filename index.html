@@ -97,9 +97,10 @@ async function atualizar() {
     let quadra = 0;
 
     dados.forEach(item => {
-      const turma = (item.turma || "").toLowerCase();
-      const curso = (item.curso || "").toLowerCase();
-      const sala  = (item.sala || "").toLowerCase();
+      const turma = (item.turma || "").toLowerCase().trim();
+      const curso = (item.curso || "").toLowerCase().trim();
+      const sala  = (item.sala || "").toLowerCase().trim();
+      
 
       if (curso.includes("integral") || turma.includes("integral")) {
         integral++;
