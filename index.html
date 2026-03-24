@@ -69,7 +69,7 @@
 </div>
 
 <script>
-const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTSOJF-CPD4jDd1RYMk0hbHdVfyjDzgnYCph8VqFxI6AqYRuw-AxUF6gIIdzPJlAMh4HjWtF0sZ6eNp/pub?output=csv";
+const URL = "https://script.google.com/macros/s/AKfycbwy9dZLj2DgqANdGgrI5YbUhfZkgRY_F3vegXDr1MWSSUrxqJrKhiDV2_RJQi4Ub9_r/exec";
 
 // cria bolinhas
 function gerarAlunos(containerId, quantidade, tipo) {
@@ -87,35 +87,19 @@ function gerarAlunos(containerId, quantidade, tipo) {
   }
 }
 
-<script>
 async function atualizar() {
   try {
     const resposta = await fetch(URL);
-    const texto = await resposta.text();
-
-    console.log("CSV bruto:", texto); // DEBUG
-
-    const linhas = texto.trim().split(/\r?\n/).slice(1);
+    const dados = await resposta.json();
 
     let integral = 0;
     let extra = 0;
     let quadra = 0;
 
-    linhas.forEach(linha => {
-      // tenta detectar separador automaticamente
-      let colunas;
-
-      if (linha.includes(";")) {
-        colunas = linha.split(";");
-      } else {
-        colunas = linha.split(",");
-      }
-
-      const turma = (colunas[1] || "").toLowerCase().trim();
-      const curso = (colunas[2] || "").toLowerCase().trim();
-      const sala  = (colunas[4] || "").toLowerCase().trim();
-
-      console.log({ turma, curso, sala }); // DEBUG
+    dados.forEach(item => {
+      const turma = (item.turma || "").toLowerCase();
+      const curso = (item.curso || "").toLowerCase();
+      const sala  = (item.sala || "").toLowerCase();
 
       if (curso.includes("integral") || turma.includes("integral")) {
         integral++;
@@ -130,8 +114,6 @@ async function atualizar() {
       }
     });
 
-    console.log("Contagem:", { integral, extra, quadra });
-
     gerarAlunos("integral", integral, "integral");
     gerarAlunos("extra", extra, "extra");
     gerarAlunos("quadra", quadra, "extra");
@@ -141,9 +123,12 @@ async function atualizar() {
       agora.getHours() + ":" + String(agora.getMinutes()).padStart(2, '0');
 
   } catch (erro) {
-    console.error("Erro ao buscar dados:", erro);
+    console.error("Erro API:", erro);
   }
 }
+
+setInterval(atualizar, 5000);
+atualizar();
 </script>
 
 </body>
