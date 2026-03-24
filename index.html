@@ -8,26 +8,28 @@
 body {
   font-family: Arial;
   text-align: center;
-  background: #111;
-  color: white;
+  background: #f5f5f5; /* branco */
+  color: #111;
 }
 
 .area {
   display: inline-block;
-  width: 220px;
-  height: 180px;
+  width: 240px;
+  height: 200px;
   margin: 10px;
-  border: 2px solid #fff;
+  border: 2px solid #333;
   position: relative;
   border-radius: 10px;
+  background: white;
 }
 
 .titulo {
   position: absolute;
   top: -20px;
   left: 10px;
-  background: #111;
+  background: #f5f5f5;
   padding: 2px 5px;
+  font-weight: bold;
 }
 
 .aluno {
@@ -37,16 +39,18 @@ body {
   position: absolute;
 }
 
-.integral { background: #00ff88; }
-.extra { background: #ffaa00; }
+.integral { background: #00cc66; }
+.extra { background: #ff9900; }
 
 .horarios {
   position: absolute;
+  top: 40px;
   bottom: 5px;
   left: 5px;
   right: 5px;
-  font-size: 10px;
+  font-size: 11px;
   text-align: left;
+  overflow-y: auto;
 }
 </style>
 </head>
@@ -74,6 +78,7 @@ body {
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbwy9dZLj2DgqANdGgrI5YbUhfZkgRY_F3vegXDr1MWSSUrxqJrKhiDV2_RJQi4Ub9_r/exec";
 
+// bolinhas
 function gerarAlunos(containerId, quantidade, tipo) {
   const container = document.getElementById(containerId);
   container.querySelectorAll('.aluno').forEach(e => e.remove());
@@ -82,7 +87,7 @@ function gerarAlunos(containerId, quantidade, tipo) {
     const aluno = document.createElement('div');
     aluno.classList.add('aluno', tipo);
 
-    aluno.style.left = Math.random() * 180 + "px";
+    aluno.style.left = Math.random() * 200 + "px";
     aluno.style.top = Math.random() * 120 + "px";
 
     container.appendChild(aluno);
@@ -98,47 +103,50 @@ async function atualizar() {
     let extra = 0;
     let quadra = 0;
 
-    let horariosIntegral = new Set();
-    let horariosExtra = new Set();
-    let horariosQuadra = new Set();
+    let listaIntegral = [];
+    let listaExtra = [];
+    let listaQuadra = [];
 
     dados.forEach(item => {
       const turma = (item.turma || "").toLowerCase().trim();
       const curso = (item.curso || "").toLowerCase().trim();
-      const sala  = (item.sala || "").toLowerCase().trim();
+      const sala  = (item.sala || "").trim();
       const horario = item.horario;
+
+      const texto = sala + " - " + horario;
 
       if (curso.includes("integral") || turma.includes("integral")) {
         integral++;
-        horariosIntegral.add(horario);
+        listaIntegral.push(texto);
       }
 
       if (turma.includes("extra")) {
         extra++;
-        horariosExtra.add(horario);
+        listaExtra.push(texto);
       }
 
-      if (sala.includes("quadra")) {
+      if (sala.toLowerCase().includes("quadra")) {
         quadra++;
-        horariosQuadra.add(horario);
+        listaQuadra.push(texto);
       }
     });
 
+    // bolinhas
     gerarAlunos("integral", integral, "integral");
     gerarAlunos("extra", extra, "extra");
     gerarAlunos("quadra", quadra, "extra");
 
-    // mostrar horários
-    document.getElementById("hIntegral").innerText =
-      "Horários: " + [...horariosIntegral].join(", ");
+    // listas
+    document.getElementById("hIntegral").innerHTML =
+      listaIntegral.map(i => "• " + i).join("<br>");
 
-    document.getElementById("hExtra").innerText =
-      "Horários: " + [...horariosExtra].join(", ");
+    document.getElementById("hExtra").innerHTML =
+      listaExtra.map(i => "• " + i).join("<br>");
 
-    document.getElementById("hQuadra").innerText =
-      "Horários: " + [...horariosQuadra].join(", ");
+    document.getElementById("hQuadra").innerHTML =
+      listaQuadra.map(i => "• " + i).join("<br>");
 
-    // hora atual
+    // hora
     const agora = new Date();
     document.getElementById("hora").innerText =
       agora.getHours() + ":" + String(agora.getMinutes()).padStart(2, '0');
@@ -148,6 +156,7 @@ async function atualizar() {
   }
 }
 
+// atualizar
 setInterval(atualizar, 5000);
 atualizar();
 </script>
