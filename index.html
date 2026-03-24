@@ -44,13 +44,12 @@ body {
 
 .horarios {
   position: absolute;
-  top: 40px;
-  bottom: 5px;
+  bottom: 5px;   /* fica no rodapé */
   left: 5px;
   right: 5px;
-  font-size: 11px;
-  text-align: left;
-  overflow-y: auto;
+  font-size: 12px;
+  text-align: center;
+  font-weight: bold;
 }
 </style>
 </head>
@@ -113,7 +112,7 @@ async function atualizar() {
   const inicio = item.inicio;
   const fim = item.fim;
 
-  const texto = sala + " (" + inicio + " - " + fim + ")";
+  const texto =  inicio + " - " + fim ;
 
   if (segmento === "integral") {
     integral++;
