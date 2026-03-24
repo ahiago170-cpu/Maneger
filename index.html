@@ -96,28 +96,26 @@ async function atualizar() {
     let horariosQuadra = new Set();
 
     dados.forEach(item => {
-      const segmento = (item.segmento || "").toLowerCase().trim();
-      const nome = item.aluno || "Sem nome";
-      const inicio = item.inicio;
-      const fim = item.fim;
+  const segmento = (item.segmento || "").toLowerCase().trim();
+  const nome = item.aluno || "Sem nome";
+  const inicio = item.inicio;
+  const fim = item.fim;
 
-      const horario = (inicio && fim) ? inicio + " - " + fim : "";
+  const horario = (inicio && fim) ? inicio + " - " + fim : "";
+  const texto = horario ? nome + " (" + horario + ")" : nome;
 
-      if (segmento.includes("integral")) {
-        nomesIntegral.push(nome);
-        if (horario) horariosIntegral.add(horario);
-      }
+  if (segmento.includes("integral")) {
+    nomesIntegral.push(texto);
+  }
 
-      if (segmento.includes("extra")) {
-        nomesExtra.push(nome);
-        if (horario) horariosExtra.add(horario);
-      }
+  if (segmento.includes("extra")) {
+    nomesExtra.push(texto);
+  }
 
-      if (segmento.includes("quadra")) {
-        nomesQuadra.push(nome);
-        if (horario) horariosQuadra.add(horario);
-      }
-    });
+  if (segmento.includes("quadra")) {
+    nomesQuadra.push(texto);
+  }
+});
 
     document.getElementById("listaIntegral").innerHTML =
       nomesIntegral.map(n => "• " + n).join("<br>");
