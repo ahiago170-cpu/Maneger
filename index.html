@@ -80,7 +80,7 @@ body {
 </div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbwIw4WS6DNd7JOK5ksyIWyIIK0waPoA6uglPIYYTusnuEtsljYSYxIEkEhiPIz8ZEeI/exec";
+const URL = "https://script.google.com/macros/s/AKfycbxz6iVyOnNS_ZOZ0HspqlQXXVJQlVQJZsWiGfXQKv8TEGFS-zHoOGjDTWXagjbR6yqF/exec";
 
 async function atualizar() {
   try {
@@ -95,31 +95,30 @@ async function atualizar() {
     let horariosExtra = new Set();
     let horariosQuadra = new Set();
 
-  dados.forEach(item => {
-  const segmento = (item.segmento || "").toLowerCase().trim();
-  const nome = item.aluno || "Sem nome";
-  const inicio = item.inicio;
-  const fim = item.fim;
+    dados.forEach(item => {
+      const segmento = (item.segmento || "").toLowerCase().trim();
+      const nome = item.aluno || "Sem nome";
+      const inicio = item.inicio;
+      const fim = item.fim;
 
-  const horario = (inicio && fim) ? inicio + " - " + fim : "";
+      const horario = (inicio && fim) ? inicio + " - " + fim : "";
 
-  if (segmento === "integral") {
-    nomesIntegral.push(nome);
-    if (horario) horariosIntegral.add(horario);
-  }
+      if (segmento.includes("integral")) {
+        nomesIntegral.push(nome);
+        if (horario) horariosIntegral.add(horario);
+      }
 
-  if (segmento === "extra") {
-    nomesExtra.push(nome);
-    if (horario) horariosExtra.add(horario);
-  }
+      if (segmento.includes("extra")) {
+        nomesExtra.push(nome);
+        if (horario) horariosExtra.add(horario);
+      }
 
-  if (segmento === "quadra") {
-    nomesQuadra.push(nome);
-    if (horario) horariosQuadra.add(horario);
-  }
-});
+      if (segmento.includes("quadra")) {
+        nomesQuadra.push(nome);
+        if (horario) horariosQuadra.add(horario);
+      }
+    });
 
-    // MOSTRAR NOMES
     document.getElementById("listaIntegral").innerHTML =
       nomesIntegral.map(n => "• " + n).join("<br>");
 
@@ -129,7 +128,6 @@ async function atualizar() {
     document.getElementById("listaQuadra").innerHTML =
       nomesQuadra.map(n => "• " + n).join("<br>");
 
-    // MOSTRAR HORÁRIOS
     document.getElementById("hIntegral").innerHTML =
       [...horariosIntegral].join("<br>");
 
@@ -139,7 +137,6 @@ async function atualizar() {
     document.getElementById("hQuadra").innerHTML =
       [...horariosQuadra].join("<br>");
 
-    // RELÓGIO
     const agora = new Date();
     document.getElementById("hora").innerText =
       agora.getHours() + ":" + String(agora.getMinutes()).padStart(2, '0');
