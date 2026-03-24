@@ -76,7 +76,7 @@ body {
 </div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbwy9dZLj2DgqANdGgrI5YbUhfZkgRY_F3vegXDr1MWSSUrxqJrKhiDV2_RJQi4Ub9_r/exec";
+const URL = "https://script.google.com/macros/s/AKfycbwUNlQOoyogBSo1fRSarj5uWxgq8FofHorGdzUzHx3Mnfcljk-1cdidzfBrc8pHaRsq/exec";
 
 // bolinhas
 function gerarAlunos(containerId, quantidade, tipo) {
@@ -107,29 +107,29 @@ async function atualizar() {
     let listaExtra = [];
     let listaQuadra = [];
 
-    dados.forEach(item => {
-      const turma = (item.turma || "").toLowerCase().trim();
-      const curso = (item.curso || "").toLowerCase().trim();
-      const sala  = (item.sala || "").trim();
-      const horario = item.horario;
+   dados.forEach(item => {
+  const segmento = item.segmento;
+  const sala = item.sala;
+  const inicio = item.inicio;
+  const fim = item.fim;
 
-      const texto = sala + " - " + horario;
+  const texto = sala + " (" + inicio + " - " + fim + ")";
 
-      if (curso.includes("integral") || turma.includes("integral")) {
-        integral++;
-        listaIntegral.push(texto);
-      }
+  if (segmento === "integral") {
+    integral++;
+    listaIntegral.push(texto);
+  }
 
-      if (turma.includes("extra")) {
-        extra++;
-        listaExtra.push(texto);
-      }
+  if (segmento === "extra") {
+    extra++;
+    listaExtra.push(texto);
+  }
 
-      if (sala.toLowerCase().includes("quadra")) {
-        quadra++;
-        listaQuadra.push(texto);
-      }
-    });
+  if (segmento === "quadra") {
+    quadra++;
+    listaQuadra.push(texto);
+  }
+});
 
     // bolinhas
     gerarAlunos("integral", integral, "integral");
