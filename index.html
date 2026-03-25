@@ -104,7 +104,7 @@ async function atualizar() {
       if (segmento === "quadra") {
         quadra.push(texto);
       }
-      if(segmento === "licao"){
+      if(segmento === "L/C"){
        licao.push(texto);
       }
     });
@@ -112,7 +112,7 @@ async function atualizar() {
     document.getElementById("listaIntegral").innerHTML = integral.join("<br>");
     document.getElementById("listaExtra").innerHTML = extra.join("<br>");
     document.getElementById("listaQuadra").innerHTML = quadra.join("<br>");
-    document.getElementById("listaLicao").innerHTML = licao.join("<br>");
+    document.getElementById("listaLicao").innerHTML = L/C.join("<br>");
 
     // relógio
     const agora = new Date();
