@@ -58,6 +58,9 @@ body {
   <div class="titulo">Quadra</div>
   <div class="lista" id="listaQuadra"></div>
 </div>
+<div class="area">
+  <div class="titulo">Licao</div>div>
+  <div class="lista" id="listaLicao"></div>
 
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbxz6iVyOnNS_ZOZ0HspqlQXXVJQlVQJZsWiGfXQKv8TEGFS-zHoOGjDTWXagjbR6yqF/exec";
@@ -70,6 +73,7 @@ async function atualizar() {
     let integral = [];
     let extra = [];
     let quadra = [];
+    let licao=[];
 
     dados.forEach(item => {
       const segmento = (item.segmento || "").toLowerCase().trim();
@@ -99,11 +103,15 @@ async function atualizar() {
       if (segmento === "quadra") {
         quadra.push(texto);
       }
+      if(segmento === "licao"){
+       licao.push(texto);
+      }
     });
 
     document.getElementById("listaIntegral").innerHTML = integral.join("<br>");
     document.getElementById("listaExtra").innerHTML = extra.join("<br>");
     document.getElementById("listaQuadra").innerHTML = quadra.join("<br>");
+    document.getElementById("listalicao").innerHTML =licao.join("<br>");
 
     // relógio
     const agora = new Date();
