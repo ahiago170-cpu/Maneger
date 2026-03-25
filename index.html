@@ -102,35 +102,45 @@ body {
 </div>
 
 <script>
-// DADOS FICTÍCIOS DE ALUNOS
+// DADOS DE TESTE (substitui a API por enquanto)
 const alunos = [
-  {aluno:"A", curso:"Hockey", segmento:"quadra", dia:"2026-03-25"},
-  {aluno:"B", curso:"Piano", segmento:"extra", dia:"2026-03-25"},
-  {aluno:"C", curso:"Hockey", segmento:"quadra", dia:"2026-03-26"},
-  {aluno:"D", curso:"Lições", segmento:"L/C", dia:"2026-03-26"},
-  {aluno:"E", curso:"Integral", segmento:"integral", dia:"2026-03-27"}
+  {aluno:"A", curso:"Hockey", segmento:"quadra", dia:"2026-03-25", inicio:"10:20", fim:"09:00"},
+  {aluno:"B", curso:"Piano", segmento:"extra", dia:"2026-03-25", inicio:"12:33", fim:"15:00"},
+  {aluno:"C", curso:"Hockey", segmento:"quadra", dia:"2026-03-26", inicio:"16:00", fim:"15:00"},
+  {aluno:"D", curso:"Lições", segmento:"L/C", dia:"2026-03-26", inicio:"16:00", fim:"16:00"},
+  {aluno:"E", curso:"Integral", segmento:"integral", dia:"2026-03-27", inicio:"", fim:""}
 ];
 
+// FUNÇÃO PARA LIMPAR HORA
+function limparHora(h){
+  if(!h) return "";
+  return String(h).substring(0,5);
+}
+
 // FUNÇÃO PARA ATUALIZAR PAINEL
-function atualizarPainel() {
+function atualizarPainel(dados) {
   let integral = [];
   let extra = [];
   let quadra = [];
   let lc = [];
   let diaCurso = [];
 
-  alunos.forEach(item => {
+  dados.forEach(item => {
     const segmento = (item.segmento || "").toLowerCase();
     const nome = item.aluno || "Sem nome";
     const curso = item.curso || "";
-    const texto = "👤 " + nome + (curso ? " - " + curso : "");
+    const inicio = limparHora(item.inicio);
+    const fim = limparHora(item.fim);
+
+    let texto = "👤 " + nome;
+    if(curso) texto += " - " + curso;
+    if(inicio && fim) texto += " (" + inicio + " - " + fim + ")";
 
     if(segmento === "integral") integral.push(texto);
     else if(segmento === "extra") extra.push(texto);
     else if(segmento === "quadra") quadra.push(texto);
     else if(segmento === "l/c") lc.push(texto);
 
-    // Dia do curso
     diaCurso.push("👤 " + nome + (curso ? " - " + curso : "") + " (" + item.dia + ")");
   });
 
@@ -142,12 +152,11 @@ function atualizarPainel() {
 
   // relógio
   const agora = new Date();
-  document.getElementById("hora").innerText =
-    agora.getHours() + ":" + String(agora.getMinutes()).padStart(2,'0');
+  document.getElementById("hora").innerText = agora.getHours() + ":" + String(agora.getMinutes()).padStart(2,'0');
 }
 
 // FUNÇÃO PARA GERAR CALENDÁRIO
-function gerarCalendario(mes, ano, alunos) {
+function gerarCalendario(mes, ano, dados) {
   const calendario = document.getElementById("calendario");
   calendario.innerHTML = "";
 
@@ -163,7 +172,7 @@ function gerarCalendario(mes, ano, alunos) {
   const primeiroDia = new Date(ano, mes, 1);
   const ultimoDia = new Date(ano, mes+1, 0);
 
-  for(let i=0; i<primeiroDia.getDay(); i++){
+  for(let i=0;i<primeiroDia.getDay();i++){
     const vazio = document.createElement("div");
     vazio.classList.add("dia");
     calendario.appendChild(vazio);
@@ -176,9 +185,9 @@ function gerarCalendario(mes, ano, alunos) {
     h4.innerText = dia;
     divDia.appendChild(h4);
 
-    const alunosDoDia = alunos.filter(a => {
+    const alunosDoDia = dados.filter(a => {
       const data = new Date(a.dia);
-      return data.getDate()===dia && data.getMonth()===mes && data.getFullYear()===ano;
+      return data.getDate() === dia && data.getMonth() === mes && data.getFullYear() === ano;
     });
 
     alunosDoDia.forEach(a => {
@@ -193,7 +202,7 @@ function gerarCalendario(mes, ano, alunos) {
 }
 
 // EXECUTAR FUNÇÕES
-atualizarPainel();
+atualizarPainel(alunos);
 const hoje = new Date();
 gerarCalendario(hoje.getMonth(), hoje.getFullYear(), alunos);
 </script>
