@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel de Alunos</title>
+<title>Painel de Alunos com Calendário</title>
 
 <style>
 body {
@@ -36,6 +36,36 @@ body {
   padding: 5px;
   font-size: 14px;
 }
+
+#calendario {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  max-width: 700px;
+  margin: 20px auto;
+}
+
+.dia {
+  border: 1px solid #ccc;
+  min-height: 60px;
+  padding: 5px;
+  text-align: left;
+  background: #fdfdfd;
+  position: relative;
+}
+
+.dia h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.aluno {
+  font-size: 12px;
+  background: #d0f0ff;
+  margin: 2px 0;
+  padding: 1px 3px;
+  border-radius: 4px;
+}
 </style>
 </head>
 
@@ -43,6 +73,8 @@ body {
 
 <h1>Painel de Alunos</h1>
 <p>Atualizado: <span id="hora"></span></p>
+
+<div id="calendario"></div>
 
 <div class="area">
   <div class="titulo">Integral</div>
@@ -58,74 +90,112 @@ body {
   <div class="titulo">Quadra</div>
   <div class="lista" id="listaQuadra"></div>
 </div>
+
 <div class="area">
-  <div class="titulo">Licão de casa</div>
+  <div class="titulo">Lição de Casa</div>
   <div class="lista" id="listaLC"></div>
 </div>
 
+<div class="area">
+  <div class="titulo">Dia do Curso</div>
+  <div class="lista" id="listaDia"></div>
+</div>
+
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbzCO1fqm7pgazsBg757PoiXPRJeR4TvFyJZgggX2cMG0S1e9JYsWqESXVfHBEiu4t8/exec";
+// DADOS FICTÍCIOS DE ALUNOS
+const alunos = [
+  {aluno:"A", curso:"Hockey", segmento:"quadra", dia:"2026-03-25"},
+  {aluno:"B", curso:"Piano", segmento:"extra", dia:"2026-03-25"},
+  {aluno:"C", curso:"Hockey", segmento:"quadra", dia:"2026-03-26"},
+  {aluno:"D", curso:"Lições", segmento:"L/C", dia:"2026-03-26"},
+  {aluno:"E", curso:"Integral", segmento:"integral", dia:"2026-03-27"}
+];
 
-async function atualizar() {
-  try {
-    const resposta = await fetch(URL);
-    const dados = await resposta.json();
+// FUNÇÃO PARA ATUALIZAR PAINEL
+function atualizarPainel() {
+  let integral = [];
+  let extra = [];
+  let quadra = [];
+  let lc = [];
+  let diaCurso = [];
 
-    let integral = [];
-    let extra = [];
-    let quadra = [];
-    let lc=[];
+  alunos.forEach(item => {
+    const segmento = (item.segmento || "").toLowerCase();
+    const nome = item.aluno || "Sem nome";
+    const curso = item.curso || "";
+    const texto = "👤 " + nome + (curso ? " - " + curso : "");
 
-    dados.forEach(item => {
-      const segmento = (item.segmento || "").toLowerCase().trim();
-      const nome = item.aluno || "Sem nome";
-      const curso = item.curso || "";
-      const inicio = item.inicio;
-      const fim = item.fim;
+    if(segmento === "integral") integral.push(texto);
+    else if(segmento === "extra") extra.push(texto);
+    else if(segmento === "quadra") quadra.push(texto);
+    else if(segmento === "l/c") lc.push(texto);
 
-      let texto = "👤 " + nome;
+    // Dia do curso
+    diaCurso.push("👤 " + nome + (curso ? " - " + curso : "") + " (" + item.dia + ")");
+  });
 
-      if (curso) {
-        texto += " - " + curso;
-      }
+  document.getElementById("listaIntegral").innerHTML = integral.join("<br>");
+  document.getElementById("listaExtra").innerHTML = extra.join("<br>");
+  document.getElementById("listaQuadra").innerHTML = quadra.join("<br>");
+  document.getElementById("listaLC").innerHTML = lc.join("<br>");
+  document.getElementById("listaDia").innerHTML = diaCurso.join("<br>");
 
-      if (inicio && fim) {
-        texto += " (" + inicio + " - " + fim + ")";
-      }
+  // relógio
+  const agora = new Date();
+  document.getElementById("hora").innerText =
+    agora.getHours() + ":" + String(agora.getMinutes()).padStart(2,'0');
+}
 
-      if (segmento === "integral") {
-        integral.push(texto);
-      }
+// FUNÇÃO PARA GERAR CALENDÁRIO
+function gerarCalendario(mes, ano, alunos) {
+  const calendario = document.getElementById("calendario");
+  calendario.innerHTML = "";
 
-      if (segmento === "extra") {
-        extra.push(texto);
-      }
+  const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  diasSemana.forEach(d => {
+    const diaCab = document.createElement("div");
+    diaCab.classList.add("dia");
+    diaCab.style.fontWeight = "bold";
+    diaCab.innerText = d;
+    calendario.appendChild(diaCab);
+  });
 
-      if (segmento === "quadra") {
-        quadra.push(texto);
-      }
-      if(segmento.toLowerCase() === "L/C"){
-       lc.push(texto);
-      }
+  const primeiroDia = new Date(ano, mes, 1);
+  const ultimoDia = new Date(ano, mes+1, 0);
+
+  for(let i=0; i<primeiroDia.getDay(); i++){
+    const vazio = document.createElement("div");
+    vazio.classList.add("dia");
+    calendario.appendChild(vazio);
+  }
+
+  for(let dia=1; dia<=ultimoDia.getDate(); dia++){
+    const divDia = document.createElement("div");
+    divDia.classList.add("dia");
+    const h4 = document.createElement("h4");
+    h4.innerText = dia;
+    divDia.appendChild(h4);
+
+    const alunosDoDia = alunos.filter(a => {
+      const data = new Date(a.dia);
+      return data.getDate()===dia && data.getMonth()===mes && data.getFullYear()===ano;
     });
 
-    document.getElementById("listaIntegral").innerHTML = integral.join("<br>");
-    document.getElementById("listaExtra").innerHTML = extra.join("<br>");
-    document.getElementById("listaQuadra").innerHTML = quadra.join("<br>");
-    document.getElementById("listaLC").innerHTML = lc.join("<br>");
+    alunosDoDia.forEach(a => {
+      const span = document.createElement("div");
+      span.classList.add("aluno");
+      span.innerText = a.aluno + " (" + a.curso + ")";
+      divDia.appendChild(span);
+    });
 
-    // relógio
-    const agora = new Date();
-    document.getElementById("hora").innerText =
-      agora.getHours() + ":" + String(agora.getMinutes()).padStart(2, '0');
-
-  } catch (erro) {
-    console.error("Erro API:", erro);
+    calendario.appendChild(divDia);
   }
 }
 
-setInterval(atualizar, 5000);
-atualizar();
+// EXECUTAR FUNÇÕES
+atualizarPainel();
+const hoje = new Date();
+gerarCalendario(hoje.getMonth(), hoje.getFullYear(), alunos);
 </script>
 
 </body>
