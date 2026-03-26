@@ -179,7 +179,17 @@ body {
 
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbzQseSpaq3ePxcVV5dZG19HAV4AXEP9Ah0bNZV2rjNqxoOEf42kTdmyUqrbjHpRjYxn/exec"; // coloque aqui a URL da sua API
+//oque  tem de errado com o aluno
+function verificarProblemas(aluno) {
+  let erros = [];
 
+  if(!aluno.curso) erros.push("❌ Curso não preenchido");
+  if(!aluno.segmento) erros.push("❌ Segmento não preenchido");
+  if(!aluno.dia && !aluno.diasSemana) erros.push("❌ Dia ou dias da semana não informado");
+  if(!aluno.inicio || !aluno.fim) erros.push("❌ Horário incompleto");
+
+  return erros;
+}
 // LIMPAR HORA
 function limparHora(h){
   if(!h) return "";
@@ -264,6 +274,15 @@ alunosComErro.forEach(a => {
   div.classList.add("alunoErro");
 
   div.innerText = "⚠️ " + a.aluno;
+
+  div.onclick = () => {
+   const erros = verificarProblemas(a);
+
+  alert(
+    "Aluno: " + a.aluno + "\n\n" +
+    erros.join("\n")
+  );
+};
 
   patio.appendChild(div);
 });
