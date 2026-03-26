@@ -34,6 +34,7 @@
   from { transform: translateY(0px); }
   to { transform: translateY(-10px); }
 }
+
 .modal {
   position: fixed;
   top: 0;
@@ -60,12 +61,13 @@
   float: right;
   font-weight: bold;
 }
+
 body {
   font-family: Arial;
   text-align: center;
   background: #f5f5f5;
-  color: #111;
 }
+
 .aluno.integral { background: #b9fbc0; }
 .aluno.extra { background: #a0c4ff; }
 .aluno.quadra { background: #fff3b0; }
@@ -79,7 +81,6 @@ body {
   border: 3px solid #333;
   border-radius: 10px;
   background: white;
-  position: relative;
 }
 
 .titulo {
@@ -93,7 +94,6 @@ body {
   overflow-y: auto;
   text-align: left;
   padding: 5px;
-  font-size: 14px;
 }
 
 #calendario {
@@ -108,20 +108,6 @@ body {
   border: 1px solid #ccc;
   min-height: 60px;
   padding: 5px;
-  text-align: left;
-  background: #fdfdfd;
-  position: relative;
-}
-
-.dia h4 {
-  margin: 0;
-  font-size: 14px;
-}
-
-.aluno {
-  color: #000;
-  font-weight: bold;
-  border-left: 4px solid #333;
 }
 </style>
 </head>
@@ -131,301 +117,145 @@ body {
 <h1>Painel de Alunos</h1>
 <p>Atualizado: <span id="hora"></span></p>
 
+<div style="margin:10px;">
+  <button onclick="mudarMes(-1)">⬅️</button>
+  <span id="mesAtualTexto"></span>
+  <button onclick="mudarMes(1)">➡️</button>
+</div>
+
 <div id="calendario"></div>
 
 <div id="patio">
   <h2>🚨 PÁTIO (Alunos com problema)</h2>
   <div id="alunosErro"></div>
 </div>
-  
+
 <div id="modal" class="modal">
   <div class="modal-conteudo">
     <span class="fechar" onclick="fecharModal()">X</span>
     <h3 id="tituloDia"></h3>
     <div id="listaModal"></div>
   </div>
-</div> 
-
-  
-<div class="area">
-  <div class="titulo">Integral</div>
-  <div class="lista" id="listaIntegral"></div>
 </div>
 
-<div class="area">
-  <div class="titulo">Extra</div>
-  <div class="lista" id="listaExtra"></div>
-</div>
-
-<div class="area">
-  <div class="titulo">Quadra</div>
-  <div class="lista" id="listaQuadra"></div>
-</div>
-
-<div class="area">
-  <div class="titulo">Lição de Casa</div>
-  <div class="lista" id="listaLC"></div>
-</div>
-
-<div class="area">
-  <div class="titulo">(Mês/dia)Curso</div>
-  <div class="lista" id="listaDia"></div>
-</div>
-
-<div class="area">
-  <div class="titulo">Resumo Geral</div>
-  <div class="lista" id="resumo"></div>
-</div>
+<div class="area"><div class="titulo">Integral</div><div id="listaIntegral" class="lista"></div></div>
+<div class="area"><div class="titulo">Extra</div><div id="listaExtra" class="lista"></div></div>
+<div class="area"><div class="titulo">Quadra</div><div id="listaQuadra" class="lista"></div></div>
+<div class="area"><div class="titulo">Lição de Casa</div><div id="listaLC" class="lista"></div></div>
+<div class="area"><div class="titulo">(Mês/dia)Curso</div><div id="listaDia" class="lista"></div></div>
+<div class="area"><div class="titulo">Resumo Geral</div><div id="resumo" class="lista"></div></div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbzQseSpaq3ePxcVV5dZG19HAV4AXEP9Ah0bNZV2rjNqxoOEf42kTdmyUqrbjHpRjYxn/exec"; // coloque aqui a URL da sua API
-//oque  tem de errado com o aluno
-function verificarProblemas(aluno) {
-  let erros = [];
+const URL = "https://script.google.com/macros/s/AKfycbzQseSpaq3ePxcVV5dZG19HAV4AXEP9Ah0bNZV2rjNqxoOEf42kTdmyUqrbjHpRjYxn/exec";
 
-  if(!aluno.curso) erros.push("❌ Curso não preenchido");
-  if(!aluno.segmento) erros.push("❌ Segmento não preenchido");
-  if(!aluno.dia && !aluno.diasSemana) erros.push("❌ Dia ou dias da semana não informado");
-  if(!aluno.inicio || !aluno.fim) erros.push("❌ Horário incompleto");
+let mesAtual = new Date().getMonth();
+let anoAtual = new Date().getFullYear();
+let alunosGlobal = [];
 
+function mudarMes(valor){
+  mesAtual += valor;
+
+  if(mesAtual < 0){ mesAtual = 11; anoAtual--; }
+  if(mesAtual > 11){ mesAtual = 0; anoAtual++; }
+
+  atualizarTextoMes();
+  gerarCalendario(mesAtual, anoAtual, alunosGlobal);
+}
+
+function atualizarTextoMes(){
+  const nomesMeses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  document.getElementById("mesAtualTexto").innerText = nomesMeses[mesAtual] + " / " + anoAtual;
+}
+
+function verificarProblemas(a){
+  let erros=[];
+  if(!a.curso) erros.push("Curso vazio");
+  if(!a.segmento) erros.push("Segmento vazio");
+  if(!a.dia && !a.diasSemana) erros.push("Sem data");
+  if(!a.inicio || !a.fim) erros.push("Horario incompleto");
   return erros;
 }
-// LIMPAR HORA
+
 function limparHora(h){
-  if(!h) return "";
-  return String(h).substring(0,5);
+  return h ? String(h).substring(0,5) : "";
 }
 
-// ATUALIZAR PAINEL
-async function atualizarPainel() {
-  try {
-    const resposta = await fetch(URL);
-    const alunos = await resposta.json();
+async function atualizarPainel(){
+  const res = await fetch(URL);
+  const alunos = await res.json();
 
-    let integral = [];
-    let extra = [];
-    let quadra = [];
-    let lc = [];
-    let diaCurso = [];
+  alunosGlobal = alunos;
 
+  let integral=[],extra=[],quadra=[],lc=[],diaCurso=[];
 
-    alunos.forEach(item => {
-      const segmento = (item.segmento || "").toLowerCase();
-      const nome = item.aluno || "Sem nome";
-      const curso = item.curso || "";
-      const inicio = limparHora(item.inicio);
-      const fim = limparHora(item.fim);
+  alunos.forEach(a=>{
+    let texto="👤 "+a.aluno;
+    if(a.curso) texto+=" - "+a.curso;
+    if(a.inicio && a.fim) texto+=" ("+a.inicio+"-"+a.fim+")";
 
-      let texto = "👤 " + nome;
-      if(curso) texto += " - " + curso;
-      if(inicio && fim) texto += " (" + inicio + " - " + fim + ")";
+    if(a.segmento==="integral") integral.push(texto);
+    else if(a.segmento==="extra") extra.push(texto);
+    else if(a.segmento==="quadra") quadra.push(texto);
+    else if(a.segmento==="l/c") lc.push(texto);
 
-      if(segmento === "integral") integral.push(texto);
-      else if(segmento === "extra") extra.push(texto);
-      else if(segmento === "quadra") quadra.push(texto);
-      else if(segmento === "l/c") lc.push(texto);
+    diaCurso.push(texto+" ("+a.dia+")");
+  });
 
-      diaCurso.push("👤 " + nome + (curso ? " - " + curso : "") + " (" + item.dia + ")");
+  listaIntegral.innerHTML=integral.join("<br>");
+  listaExtra.innerHTML=extra.join("<br>");
+  listaQuadra.innerHTML=quadra.join("<br>");
+  listaLC.innerHTML=lc.join("<br>");
+  listaDia.innerHTML=diaCurso.join("<br>");
+
+  // patio erro
+  alunosErro.innerHTML="";
+  alunos.filter(a=>verificarProblemas(a).length>0).forEach(a=>{
+    let div=document.createElement("div");
+    div.className="alunoErro";
+    div.innerText=a.aluno;
+    div.onclick=()=>alert(verificarProblemas(a).join("\n"));
+    alunosErro.appendChild(div);
+  });
+
+  atualizarTextoMes();
+  gerarCalendario(mesAtual, anoAtual, alunosGlobal);
+}
+
+function gerarCalendario(mes,ano,dados){
+  calendario.innerHTML="";
+
+  ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].forEach(d=>{
+    let div=document.createElement("div");
+    div.innerText=d;
+    calendario.appendChild(div);
+  });
+
+  let diasMes=new Date(ano,mes+1,0).getDate();
+
+  for(let dia=1;dia<=diasMes;dia++){
+    let div=document.createElement("div");
+    div.className="dia";
+    div.innerHTML="<b>"+dia+"</b>";
+
+    let lista=dados.filter(a=>{
+      if(a.dia){
+        let d=a.dia.split("-");
+        if(Number(d[2])===dia) return true;
+      }
+      return false;
     });
 
-    document.getElementById("listaIntegral").innerHTML = integral.join("<br>");
-    document.getElementById("listaExtra").innerHTML = extra.join("<br>");
-    document.getElementById("listaQuadra").innerHTML = quadra.join("<br>");
-    document.getElementById("listaLC").innerHTML = lc.join("<br>");
-    document.getElementById("listaDia").innerHTML = diaCurso.join("<br>");
-   //contador de alunos
-    let total = alunos.length;
-
-   let totalIntegral = 0;
-   let totalExtra = 0;
-   let totalQuadra = 0;
-   let totalLC = 0;
-
-alunos.forEach(item => {
-  const segmento = (item.segmento || "").toLowerCase();
-
-  if(segmento === "integral") totalIntegral++;
-  else if(segmento === "extra") totalExtra++;
-  else if(segmento === "quadra") totalQuadra++;
-  else if(segmento === "l/c") totalLC++;
-
-  // resto do seu código continua normal...
-});
-    document.getElementById("resumo").innerHTML = `
-    👥 Total de alunos: <b>${total}</b><br><br>
-  
-    🟢 Integral: ${totalIntegral}<br>
-    🔵 Extra: ${totalExtra}<br>
-    🟡 Quadra: ${totalQuadra}<br>
-    🟣 L/C: ${totalLC}<br><br>
-
-    📊 Status: Sistema organizado ✔
-`;
-    // ===== PÁTIO =====
-let alunosComErro = alunos.filter(a => {
-  return !a.curso || !a.segmento || (!a.dia && !a.diasSemana);
-});
-
-const patio = document.getElementById("alunosErro");
-patio.innerHTML = "";
-
-alunosComErro.forEach(a => {
-  const div = document.createElement("div");
-  div.classList.add("alunoErro");
-
-  div.innerText = "⚠️ " + a.aluno;
-
-  div.onclick = () => {
-   const erros = verificarProblemas(a);
-
-  alert(
-    "Aluno: " + a.aluno + "\n\n" +
-    erros.join("\n")
-  );
-};
-
-  patio.appendChild(div);
-});
-    // relógio
-    const agora = new Date();
-    document.getElementById("hora").innerText =
-      agora.getHours() + ":" + String(agora.getMinutes()).padStart(2,'0');
-
-    // gerar calendário com dados da API
-    const hoje = new Date();
-    gerarCalendario(hoje.getMonth(), hoje.getFullYear(), alunos);
-
-  } catch (erro) {
-    console.error("Erro API:", erro);
-  }
-}
-  
-function abrirModal(dia, mes, ano, alunos) {
-  const modal = document.getElementById("modal");
-  const lista = document.getElementById("listaModal");
-  const titulo = document.getElementById("tituloDia");
-
-  titulo.innerText = `Dia ${dia}/${mes+1}/${ano}`;
-  lista.innerHTML = "";
-
-  alunos.forEach(a => {
-    const div = document.createElement("div");
-
-    let seg = (a.segmento || "").toLowerCase().trim();
-    if(seg === "l/c") seg = "lc";
-
-    div.classList.add("aluno");
-    div.classList.add(seg);
-
-    let textoModal = a.aluno;
-
-   if(a.curso) textoModal += " (" + a.curso + ")";
-
-    if(a.diasSemana){
-      textoModal += " - " + a.diasSemana;
-  }
-
-    div.innerText = textoModal;
-    lista.appendChild(div);
-  });
-
-  modal.style.display = "flex";
-}
-function fecharModal() {
-  document.getElementById("modal").style.display = "none";
-}
-
-
-// GERAR CALENDÁRIO
-function gerarCalendario(mes, ano, dados) {
-  const calendario = document.getElementById("calendario");
-  calendario.innerHTML = "";
-
-  const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
-  diasSemana.forEach(d => {
-    const diaCab = document.createElement("div");
-    diaCab.classList.add("dia");
-    diaCab.style.fontWeight = "bold";
-    diaCab.innerText = d;
-    calendario.appendChild(diaCab);
-  });
-
-  const primeiroDia = new Date(ano, mes, 1);
-  const ultimoDia = new Date(ano, mes+1, 0);
-
-  for(let dia=1; dia<=ultimoDia.getDate(); dia++){
-  const divDia = document.createElement("div");
-  divDia.classList.add("dia");
-  divDia.style.cursor = "pointer";
-
-
-
-  const h4 = document.createElement("h4");
-  h4.innerText = dia;
-  divDia.appendChild(h4);
-
- const alunosDoDia = dados.filter(a => {
-
-
-// 1️⃣ Data fixa (repete todo mês)
-if (a.dia) {
-  const partes = a.dia.trim().split("-");
-
-  if (partes.length === 3) {
-    const diaA = Number(partes[2]);
-
-    // só compara o DIA (ignora mês e ano)
-    if (diaA === dia) {
-      return true;
+    if(lista.length){
+      div.innerHTML+="<br>🎯 "+lista.length;
+      div.onclick=()=>alert(lista.map(a=>a.aluno).join("\n"));
     }
+
+    calendario.appendChild(div);
   }
 }
 
-  // 2️⃣ Se tiver dias da semana
-  if (a.diasSemana) {
-    const diasMap = {
-      "DOM": 0,
-      "SEG": 1,
-      "TER": 2,
-      "QUA": 3,
-      "QUI": 4,
-      "SEX": 5,
-      "SAB": 6
-    };
-
-    const dataAtual = new Date(ano, mes, dia);
-    const diaSemana = dataAtual.getDay();
-
-    const diasAluno = a.diasSemana.split("-");
-
-    return diasAluno.some(d => diasMap[d] === diaSemana);
-  }
-
-  return false;
-});
- divDia.onclick = () => {
-  abrirModal(dia, mes, ano, alunosDoDia);
-};
-  if (alunosDoDia.length > 0) {
-  const marcador = document.createElement("div");
-
-  marcador.style.marginTop = "5px";
-  marcador.style.fontSize = "12px";
-  marcador.style.textAlign = "center";
-  marcador.style.fontWeight = "bold";
-
-  marcador.innerText = "🎯 " + alunosDoDia.length + " aluno(s)";
-
-  divDia.appendChild(marcador);
-}
-
-  calendario.appendChild(divDia);
-}
-}
-
-// ATUALIZA AUTOMATICAMENTE
 atualizarPainel();
-setInterval(atualizarPainel, 5000);
+setInterval(atualizarPainel,5000);
 </script>
 
 </body>
