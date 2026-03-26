@@ -1,4 +1,4 @@
-confere <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -130,14 +130,9 @@ body {
 
 <h1>Painel de Alunos</h1>
 <p>Atualizado: <span id="hora"></span></p>
-<div style="margin:10px;">
-  <button onclick="mudarMes(-1)">⬅️</button>
-  <span id="mesAtualTexto" style="font-weight:bold; margin: 0 10px;"></span>
-  <button onclick="mudarMes(1)">➡️</button>
-</div>  
-  
+
 <div id="calendario"></div>
- 
+
 <div id="patio">
   <h2>🚨 PÁTIO (Alunos com problema)</h2>
   <div id="alunosErro"></div>
@@ -200,21 +195,6 @@ function limparHora(h){
   if(!h) return "";
   return String(h).substring(0,5);
 }
-function mudarMes(valor) {
-  mesAtual += valor;
-
-  if (mesAtual < 0) {
-    mesAtual = 11;
-    anoAtual--;
-  }
-
-  if (mesAtual > 11) {
-    mesAtual = 0;
-    anoAtual++;
-  }
-
-  gerarCalendario(mesAtual, anoAtual, alunosGlobal);
-}
 
 // ATUALIZAR PAINEL
 async function atualizarPainel() {
@@ -227,9 +207,6 @@ async function atualizarPainel() {
     let quadra = [];
     let lc = [];
     let diaCurso = [];
-    let mesAtual = new Date().getMonth();
-    let anoAtual = new Date().getFullYear();
-    let alunosGlobal = [];
 
 
     alunos.forEach(item => {
@@ -315,16 +292,8 @@ alunosComErro.forEach(a => {
       agora.getHours() + ":" + String(agora.getMinutes()).padStart(2,'0');
 
     // gerar calendário com dados da API
-    const nomesMeses = [
-    "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
-];
-
-document.getElementById("mesAtualTexto").innerText =
-  nomesMeses[mes] + " / " + ano;
     const hoje = new Date();
-    alunosGlobal = alunos;
-    gerarCalendario(mesAtual, anoAtual, alunosGlobal);
+    gerarCalendario(hoje.getMonth(), hoje.getFullYear(), alunos);
 
   } catch (erro) {
     console.error("Erro API:", erro);
