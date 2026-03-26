@@ -207,13 +207,7 @@ function verificarProblemas(aluno) {
   return erros;
 }
 // LIMPAR HORA
-function horarioValido(h) {
-  if (!h) return false;
 
-  const [hora, min] = h.split(":").map(Number);
-
-  return hora >= 0 && hora <= 23 && min >= 0 && min <= 59;
-}
   
 function limparHora(h){
   if(!h) return "";
