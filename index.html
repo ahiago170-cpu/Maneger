@@ -295,24 +295,18 @@ function gerarCalendario(mes, ano, dados) {
  divDia.onclick = () => {
   abrirModal(dia, mes, ano, alunosDoDia);
 };
-  alunosDoDia.forEach(a => {
-  const span = document.createElement("div");
+  if (alunosDoDia.length > 0) {
+  const marcador = document.createElement("div");
 
-  // classe base
-  span.classList.add("aluno");
+  marcador.style.marginTop = "5px";
+  marcador.style.fontSize = "12px";
+  marcador.style.textAlign = "center";
+  marcador.style.fontWeight = "bold";
 
-  // pega segmento
-  let seg = (a.segmento || "").toLowerCase().trim();
+  marcador.innerText = "🎯 " + alunosDoDia.length + " aluno(s)";
 
-  // corrige nome do L/C
-  if(seg === "l/c") seg = "lc";
-
-  // adiciona classe de cor
-  span.classList.add(seg);
-
-  span.innerText = a.aluno + " (" + a.curso + ")";
-  divDia.appendChild(span);
-});
+  divDia.appendChild(marcador);
+}
 
   calendario.appendChild(divDia);
 }
