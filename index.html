@@ -102,7 +102,7 @@ body {
 </div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbwJQXL0Kv5KRZVOEFTxz-G0PMnXXROUqp5acI7WNSi-0d8DnwXa9TSgxt_xxkZW7Ok/exec"; // coloque aqui a URL da sua API
+const URL = "https://script.google.com/macros/s/AKfycbzQseSpaq3ePxcVV5dZG19HAV4AXEP9Ah0bNZV2rjNqxoOEf42kTdmyUqrbjHpRjYxn/exec"; // coloque aqui a URL da sua API
 
 // LIMPAR HORA
 function limparHora(h){
@@ -186,11 +186,38 @@ function gerarCalendario(mes, ano, dados) {
   h4.innerText = dia;
   divDia.appendChild(h4);
 
-  const alunosDoDia = dados.filter(a => {
-    if(!a.dia) return false;
+ const alunosDoDia = dados.filter(a => {
+
+  // 1️⃣ Se tiver data fixa
+  if (a.dia) {
     const [anoA, mesA, diaA] = a.dia.split('-').map(Number);
-    return diaA === dia && (mesA - 1) === mes && anoA === ano;
-  });
+    if (diaA === dia && (mesA - 1) === mes && anoA === ano) {
+      return true;
+    }
+  }
+
+  // 2️⃣ Se tiver dias da semana
+  if (a.diasSemana) {
+    const diasMap = {
+      "DOM": 0,
+      "SEG": 1,
+      "TER": 2,
+      "QUA": 3,
+      "QUI": 4,
+      "SEX": 5,
+      "SAB": 6
+    };
+
+    const dataAtual = new Date(ano, mes, dia);
+    const diaSemana = dataAtual.getDay();
+
+    const diasAluno = a.diasSemana.split("-");
+
+    return diasAluno.some(d => diasMap[d] === diaSemana);
+  }
+
+  return false;
+});
 
   alunosDoDia.forEach(a => {
     const span = document.createElement("div");
