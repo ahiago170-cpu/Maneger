@@ -251,8 +251,21 @@ alunos.forEach(item => {
 
     📊 Status: Sistema organizado ✔
 `;
-    let alunosComErro = alunos.filter(a => {
+    // ===== PÁTIO =====
+let alunosComErro = alunos.filter(a => {
   return !a.curso || !a.segmento || (!a.dia && !a.diasSemana);
+});
+
+const patio = document.getElementById("alunosErro");
+patio.innerHTML = "";
+
+alunosComErro.forEach(a => {
+  const div = document.createElement("div");
+  div.classList.add("alunoErro");
+
+  div.innerText = "⚠️ " + a.aluno;
+
+  patio.appendChild(div);
 });
     // relógio
     const agora = new Date();
@@ -302,24 +315,7 @@ function abrirModal(dia, mes, ano, alunos) {
 function fecharModal() {
   document.getElementById("modal").style.display = "none";
 }
-// detectar alunos com problema
-let alunosComErro = alunos.filter(a => {
-  return !a.curso || !a.segmento || (!a.dia && !a.diasSemana);
-});
 
-// limpar pátio
-const patio = document.getElementById("alunosErro");
-patio.innerHTML = "";
-
-// adicionar alunos
-alunosComErro.forEach(a => {
-  const div = document.createElement("div");
-  div.classList.add("alunoErro");
-
-  div.innerText = "⚠️ " + a.aluno;
-
-  patio.appendChild(div);
-});
 
 // GERAR CALENDÁRIO
 function gerarCalendario(mes, ano, dados) {
