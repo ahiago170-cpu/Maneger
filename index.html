@@ -191,11 +191,6 @@ function gerarCalendario(mes, ano, dados) {
     h4.innerText = dia;
     divDia.appendChild(h4);
 
-     const alunosDoDia = dados.filter(a => {
-     const data = new Date(a.dia);
-      return data.getDate() === dia && data.getMonth() === mes && data.getFullYear() === ano;
-});
-
     const alunosDoDia = dados.filter(a => {
     if(!a.dia) return false;
     const [anoA, mesA, diaA] = a.dia.split('-').map(Number);
