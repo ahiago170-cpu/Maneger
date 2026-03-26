@@ -180,23 +180,28 @@ body {
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbzQseSpaq3ePxcVV5dZG19HAV4AXEP9Ah0bNZV2rjNqxoOEf42kTdmyUqrbjHpRjYxn/exec"; // coloque aqui a URL da sua API
 //oque  tem de errado com o aluno
+function limpar(valor){
+  if(valor === null || valor === undefined) return "";
+  return String(valor).trim();
+}
+
 function verificarProblemas(aluno) {
   let erros = [];
 
-  const curso = (aluno.curso || "").trim();
-  const segmento = (aluno.segmento || "").trim();
-  const dia = (aluno.dia || "").trim();
-  const diasSemana = (aluno.diasSemana || "").trim();
-  const inicio = (aluno.inicio || "").toString().trim();
-  const fim = (aluno.fim || "").toString().trim();
+  const curso = limpar(aluno.curso);
+  const segmento = limpar(aluno.segmento);
+  const dia = limpar(aluno.dia);
+  const diasSemana = limpar(aluno.diasSemana);
+  const inicio = limpar(aluno.inicio);
+  const fim = limpar(aluno.fim);
 
-  if (!curso) erros.push("❌ Curso");
-  if (!segmento) erros.push("❌ Segmento");
+  if (curso === "") erros.push("❌ Curso");
+  if (segmento === "") erros.push("❌ Segmento");
 
-  if (!dia && !diasSemana)
+  if (dia === "" && diasSemana === "")
     erros.push("📅 Sem data");
 
-  if (!inicio || !fim)
+  if (inicio === "" || fim === "")
     erros.push("⏰ Sem horário");
 
   return erros;
