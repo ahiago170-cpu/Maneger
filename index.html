@@ -178,27 +178,29 @@ function gerarCalendario(mes, ano, dados) {
   const primeiroDia = new Date(ano, mes, 1);
   const ultimoDia = new Date(ano, mes+1, 0);
 
-  for(let i=0;i<primeiroDia.getDay();i++){
-    const vazio = document.createElement("div");
-    vazio.classList.add("dia");
-    calendario.appendChild(vazio);
-  }
-
   for(let dia=1; dia<=ultimoDia.getDate(); dia++){
-    const divDia = document.createElement("div");
-    divDia.classList.add("dia");
-    const h4 = document.createElement("h4");
-    h4.innerText = dia;
-    divDia.appendChild(h4);
+  const divDia = document.createElement("div");
+  divDia.classList.add("dia");
 
-    const alunosDoDia = dados.filter(a => {
+  const h4 = document.createElement("h4");
+  h4.innerText = dia;
+  divDia.appendChild(h4);
+
+  const alunosDoDia = dados.filter(a => {
     if(!a.dia) return false;
     const [anoA, mesA, diaA] = a.dia.split('-').map(Number);
     return diaA === dia && (mesA - 1) === mes && anoA === ano;
-});
+  });
 
-    calendario.appendChild(divDia);
-  }
+  alunosDoDia.forEach(a => {
+    const span = document.createElement("div");
+    span.classList.add("aluno");
+    span.innerText = a.aluno + " (" + a.curso + ")";
+    divDia.appendChild(span);
+  });
+
+  calendario.appendChild(divDia);
+}
 }
 
 // ATUALIZA AUTOMATICAMENTE
