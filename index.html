@@ -342,6 +342,8 @@ function gerarCalendario(mes, ano, dados) {
   calendario.innerHTML = "";
 
   const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+
+  // Cabeçalho dias da semana
   diasSemana.forEach(d => {
     const diaCab = document.createElement("div");
     diaCab.classList.add("dia");
@@ -350,77 +352,74 @@ function gerarCalendario(mes, ano, dados) {
     calendario.appendChild(diaCab);
   });
 
-  const primeiroDia = new Date(ano, mes, 1);
-  const ultimoDia = new Date(ano, mes+1, 0);
+  const primeiroDia = new Date(ano, mes, 1).getDay();
+  const ultimoDia = new Date(ano, mes + 1, 0).getDate();
 
-  for(let dia=1; dia<=ultimoDia.getDate(); dia++){
-  const divDia = document.createElement("div");
-  divDia.classList.add("dia");
-  divDia.style.cursor = "pointer";
-
-
-
-  const h4 = document.createElement("h4");
-  h4.innerText = dia;
-  divDia.appendChild(h4);
-
- const alunosDoDia = dados.filter(a => {
-
-
-// 1️⃣ Data fixa (repete todo mês)
-if (a.dia) {
-  const partes = a.dia.trim().split("-");
-
-  if (partes.length === 3) {
-    const diaA = Number(partes[2]);
-
-    // só compara o DIA (ignora mês e ano)
-    if (diaA === dia) {
-      return true;
-    }
+  // 🔥 ISSO AQUI É O QUE FALTAVA (dias vazios estilo Windows)
+  for (let i = 0; i < primeiroDia; i++) {
+    const vazio = document.createElement("div");
+    vazio.classList.add("dia");
+    vazio.style.background = "#eee";
+    calendario.appendChild(vazio);
   }
-}
 
-  // 2️⃣ Se tiver dias da semana
-  if (a.diasSemana) {
-    const diasMap = {
-      "DOM": 0,
-      "SEG": 1,
-      "TER": 2,
-      "QUA": 3,
-      "QUI": 4,
-      "SEX": 5,
-      "SAB": 6
+  // Dias do mês
+  for (let dia = 1; dia <= ultimoDia; dia++) {
+
+    const divDia = document.createElement("div");
+    divDia.classList.add("dia");
+    divDia.style.cursor = "pointer";
+
+    const h4 = document.createElement("h4");
+    h4.innerText = dia;
+    divDia.appendChild(h4);
+
+    const alunosDoDia = dados.filter(a => {
+
+      // 1️⃣ DIA FIXO (repete todo mês)
+      if (a.dia) {
+        const partes = a.dia.trim().split("-");
+        if (partes.length === 3) {
+          const diaA = Number(partes[2]);
+          if (diaA === dia) return true;
+        }
+      }
+
+      // 2️⃣ DIA DA SEMANA
+      if (a.diasSemana) {
+        const diasMap = {
+          "DOM": 0, "SEG": 1, "TER": 2,
+          "QUA": 3, "QUI": 4, "SEX": 5, "SAB": 6
+        };
+
+        const dataAtual = new Date(ano, mes, dia);
+        const diaSemana = dataAtual.getDay();
+        const diasAluno = a.diasSemana.split("-");
+
+        return diasAluno.some(d => diasMap[d] === diaSemana);
+      }
+
+      return false;
+    });
+
+    // Clique abre modal
+    divDia.onclick = () => {
+      abrirModal(dia, mes, ano, alunosDoDia);
     };
 
-    const dataAtual = new Date(ano, mes, dia);
-    const diaSemana = dataAtual.getDay();
+    // Marcador
+    if (alunosDoDia.length > 0) {
+      const marcador = document.createElement("div");
+      marcador.style.marginTop = "5px";
+      marcador.style.fontSize = "12px";
+      marcador.style.textAlign = "center";
+      marcador.style.fontWeight = "bold";
+      marcador.innerText = "🎯 " + alunosDoDia.length;
+      divDia.appendChild(marcador);
+    }
 
-    const diasAluno = a.diasSemana.split("-");
-
-    return diasAluno.some(d => diasMap[d] === diaSemana);
+    calendario.appendChild(divDia);
   }
-
-  return false;
-});
- divDia.onclick = () => {
-  abrirModal(dia, mes, ano, alunosDoDia);
-};
-  if (alunosDoDia.length > 0) {
-  const marcador = document.createElement("div");
-
-  marcador.style.marginTop = "5px";
-  marcador.style.fontSize = "12px";
-  marcador.style.textAlign = "center";
-  marcador.style.fontWeight = "bold";
-
-  marcador.innerText = "🎯 " + alunosDoDia.length + " aluno(s)";
-
-  divDia.appendChild(marcador);
-}
-
-  calendario.appendChild(divDia);
-}
 }
 
 // ATUALIZA AUTOMATICAMENTE
