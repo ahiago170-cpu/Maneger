@@ -183,13 +183,20 @@ const URL = "https://script.google.com/macros/s/AKfycbzQseSpaq3ePxcVV5dZG19HAV4A
 function verificarProblemas(aluno) {
   let erros = [];
 
-  if(!aluno.curso) erros.push("❌ Curso");
-  if(!aluno.segmento) erros.push("❌ Segmento");
+  const curso = (aluno.curso || "").trim();
+  const segmento = (aluno.segmento || "").trim();
+  const dia = (aluno.dia || "").trim();
+  const diasSemana = (aluno.diasSemana || "").trim();
+  const inicio = (aluno.inicio || "").toString().trim();
+  const fim = (aluno.fim || "").toString().trim();
 
-  if(!aluno.dia && !aluno.diasSemana)
+  if (!curso) erros.push("❌ Curso");
+  if (!segmento) erros.push("❌ Segmento");
+
+  if (!dia && !diasSemana)
     erros.push("📅 Sem data");
 
-  if(!aluno.inicio || !aluno.fim)
+  if (!inicio || !fim)
     erros.push("⏰ Sem horário");
 
   return erros;
