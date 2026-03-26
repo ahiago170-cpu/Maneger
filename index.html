@@ -11,6 +11,10 @@ body {
   background: #f5f5f5;
   color: #111;
 }
+.aluno.integral { background: #b9fbc0; }
+.aluno.extra { background: #a0c4ff; }
+.aluno.quadra { background: #fff3b0; }
+.aluno.lc { background: #e0aaff; }
 
 .area {
   display: inline-block;
@@ -220,11 +224,23 @@ function gerarCalendario(mes, ano, dados) {
 });
 
   alunosDoDia.forEach(a => {
-    const span = document.createElement("div");
-    span.classList.add("aluno");
-    span.innerText = a.aluno + " (" + a.curso + ")";
-    divDia.appendChild(span);
-  });
+  const span = document.createElement("div");
+
+  // classe base
+  span.classList.add("aluno");
+
+  // pega segmento
+  let seg = (a.segmento || "").toLowerCase().trim();
+
+  // corrige nome do L/C
+  if(seg === "l/c") seg = "lc";
+
+  // adiciona classe de cor
+  span.classList.add(seg);
+
+  span.innerText = a.aluno + " (" + a.curso + ")";
+  divDia.appendChild(span);
+});
 
   calendario.appendChild(divDia);
 }
