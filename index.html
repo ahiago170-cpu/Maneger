@@ -246,8 +246,10 @@ function gerarCalendario(mes, ano, dados) {
   divDia.classList.add("dia");
   divDia.style.cursor = "pointer";
 
-  divDia.onclick = () => {
-  alert("Clicou no dia " + dia);
+ divDia.onclick = () => {
+  if(alunosDoDia.length > 0){
+    abrirModal(dia, mes, ano, alunosDoDia);
+  }
 };
 
   const h4 = document.createElement("h4");
