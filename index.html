@@ -275,7 +275,7 @@ alunos.forEach(item => {
 `;
     // ===== PÁTIO =====
 let alunosComErro = alunos.filter(a => {
-  return !a.curso || !a.segmento || (!a.dia && !a.diasSemana);
+  return verificarProblemas(a).length > 0;
 });
 
 const patio = document.getElementById("alunosErro");
