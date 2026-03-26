@@ -138,6 +138,11 @@ body {
   <div class="lista" id="listaDia"></div>
 </div>
 
+<div class="area">
+  <div class="titulo">Resumo Geral</div>
+  <div class="lista" id="resumo"></div>
+</div>
+
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbzQseSpaq3ePxcVV5dZG19HAV4AXEP9Ah0bNZV2rjNqxoOEf42kTdmyUqrbjHpRjYxn/exec"; // coloque aqui a URL da sua API
 
@@ -158,6 +163,7 @@ async function atualizarPainel() {
     let quadra = [];
     let lc = [];
     let diaCurso = [];
+
 
     alunos.forEach(item => {
       const segmento = (item.segmento || "").toLowerCase();
@@ -183,7 +189,34 @@ async function atualizarPainel() {
     document.getElementById("listaQuadra").innerHTML = quadra.join("<br>");
     document.getElementById("listaLC").innerHTML = lc.join("<br>");
     document.getElementById("listaDia").innerHTML = diaCurso.join("<br>");
+   //contador de alunos
+    let total = alunos.length;
 
+   let totalIntegral = 0;
+   let totalExtra = 0;
+   let totalQuadra = 0;
+   let totalLC = 0;
+
+alunos.forEach(item => {
+  const segmento = (item.segmento || "").toLowerCase();
+
+  if(segmento === "integral") totalIntegral++;
+  else if(segmento === "extra") totalExtra++;
+  else if(segmento === "quadra") totalQuadra++;
+  else if(segmento === "l/c") totalLC++;
+
+  // resto do seu código continua normal...
+});
+    document.getElementById("resumo").innerHTML = `
+    👥 Total de alunos: <b>${total}</b><br><br>
+  
+    🟢 Integral: ${totalIntegral}<br>
+    🔵 Extra: ${totalExtra}<br>
+    🟡 Quadra: ${totalQuadra}<br>
+    🟣 L/C: ${totalLC}<br><br>
+
+    📊 Status: Sistema organizado ✔
+`;
     // relógio
     const agora = new Date();
     document.getElementById("hora").innerText =
@@ -197,6 +230,7 @@ async function atualizarPainel() {
     console.error("Erro API:", erro);
   }
 }
+  
 function abrirModal(dia, mes, ano, alunos) {
   const modal = document.getElementById("modal");
   const lista = document.getElementById("listaModal");
