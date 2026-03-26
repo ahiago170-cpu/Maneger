@@ -366,16 +366,16 @@ function gerarCalendario(mes, ano, dados) {
 
  const alunosDoDia = dados.filter(a => {
 
-  // 1️⃣ Se tiver data fixa
+
+// 1️⃣ Data fixa (repete todo mês)
 if (a.dia) {
   const partes = a.dia.trim().split("-");
-  
+
   if (partes.length === 3) {
-    const anoA = Number(partes[0]);
-    const mesA = Number(partes[1]) - 1;
     const diaA = Number(partes[2]);
 
-    if (diaA === dia && mesA === mes && anoA === ano) {
+    // só compara o DIA (ignora mês e ano)
+    if (diaA === dia) {
       return true;
     }
   }
