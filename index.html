@@ -214,7 +214,15 @@ function abrirModal(dia, mes, ano, alunos) {
     div.classList.add("aluno");
     div.classList.add(seg);
 
-    div.innerText = a.aluno + " (" + a.curso + ")";
+    let textoModal = a.aluno;
+
+   if(a.curso) textoModal += " (" + a.curso + ")";
+
+    if(a.diasSemana){
+      textoModal += " - " + a.diasSemana;
+  }
+
+    div.innerText = textoModal;
     lista.appendChild(div);
   });
 
