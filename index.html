@@ -5,6 +5,18 @@
 <title>Painel de Alunos com Calendário</title>
 
 <style>
+.topo-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+}
+
+.imagem-lateral img {
+  width: 250px;
+  border: 2px solid #333;
+  border-radius: 10px;
+}
 .layoutPrincipal {
   display: flex;
   justify-content: center;
@@ -178,7 +190,15 @@ body {
 
   <!-- CONTEÚDO DIREITA -->
   <div class="conteudoDireita">
-    <div id="calendario"></div>
+   <div class="topo-container">
+
+  <div id="calendario"></div>
+
+  <div class="imagem-lateral">
+    <img src="tabela.png" alt="Tabela de Segmentos">
+  </div>
+
+</div>
   </div>
 
 </div>
