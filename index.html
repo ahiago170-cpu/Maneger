@@ -168,7 +168,9 @@ body {
   <!-- FILTRO NA ESQUERDA -->
   <div class="filtroLateral">
     <div class="area">
-      <div class="titulo">Filtro (<span id="qtdFiltro">0</span>)</div>
+      <div class="titulo" id="tituloFiltro">
+  Filtro: Todos (<span id="qtdFiltro">0</span>)
+</div>
       <div class="lista" id="listaFiltro"></div>
     </div>
   </div>
@@ -425,6 +427,8 @@ function filtrar(tipo) {
     lista.innerHTML += texto + "<br>";
   });
 document.getElementById("qtdFiltro").innerText = filtrados.length;
+document.getElementById("tituloFiltro").innerHTML =
+"Filtro: " + formatarNome(tipo) + " (<span id='qtdFiltro'>" + filtrados.length + "</span>)";
 }
   
 function abrirModal(dia, mes, ano, alunos) {
