@@ -5,6 +5,22 @@
 <title>Painel de Alunos com Calendário</title>
 
 <style>
+.layoutPrincipal {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+.filtroLateral {
+  width: 260px;
+}
+
+.conteudoDireita {
+  flex: 1;
+  max-width: 700px;
+}
 #patio {
   margin: 20px auto;
   padding: 15px;
@@ -147,7 +163,22 @@ body {
 </div>
 <p>Atualizado: <span id="hora"></span></p>
 
-<div id="calendario"></div>
+<div class="layoutPrincipal">
+
+  <!-- FILTRO NA ESQUERDA -->
+  <div class="filtroLateral">
+    <div class="area">
+      <div class="titulo">Filtro</div>
+      <div class="lista" id="listaFiltro"></div>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO DIREITA -->
+  <div class="conteudoDireita">
+    <div id="calendario"></div>
+  </div>
+
+</div>
 
 <div id="patio">
   <h2>🚨 PÁTIO (Alunos com problema)</h2>
@@ -167,11 +198,7 @@ body {
   <div class="titulo">Integral</div>
   <div class="lista" id="listaIntegral"></div>
 </div>
-<!-- FILTRO DOS ALUNOS -->
-<div class="area">
-  <div class="titulo">Filtro</div>
-  <div class="lista" id="listaFiltro"></div>
-</div>
+
 
 <div class="area">
   <div class="titulo">Extra</div>
