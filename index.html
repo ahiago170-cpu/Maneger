@@ -482,13 +482,17 @@ function fecharModal() {
   // filtrar calendario
 function filtrarAlunosParaCalendario() {
 
+  const busca = document.getElementById("buscaNome").value.toLowerCase().trim();
+
   return alunosGlobal.filter(a => {
 
+    const nome = (a.aluno || "").toLowerCase().trim();
     const segmento = (a.segmento || "").toLowerCase().trim();
 
-    if (filtroAtual === "todos") return true;
+    const bateBusca = nome.includes(busca);
+    const bateTipo = (filtroAtual === "todos") || (segmento === filtroAtual);
 
-    return segmento === filtroAtual;
+    return bateBusca && bateTipo;
   });
 
 }
