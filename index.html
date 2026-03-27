@@ -377,8 +377,9 @@ alunosComErro.forEach(a => {
       agora.getHours() + ":" + String(agora.getMinutes()).padStart(2,'0');
 
     // gerar calendário com dados da API
-    const hoje = new Date();
-    gerarCalendario(hoje.getMonth(), hoje.getFullYear(), alunos);
+   const alunosFiltrados = filtrarAlunosParaCalendario();
+   gerarCalendario(hoje.getMonth(), hoje.getFullYear(), alunosFiltrados);
+    
   // 🔥 ATUALIZA FILTRO AUTOMATICAMENTE
   filtrar(filtroAtual);
   } catch (erro) {
@@ -438,7 +439,9 @@ function filtrar(tipo) {
 document.getElementById("nomeFiltro").innerText = nomes[tipo] || tipo;
 document.getElementById("qtdFiltro").innerText = filtrados.length;
  
-
+const hoje = new Date();
+const alunosFiltrados = filtrarAlunosParaCalendario();
+gerarCalendario(hoje.getMonth(), hoje.getFullYear(), alunosFiltrados);
 
 }
   
@@ -476,7 +479,19 @@ function abrirModal(dia, mes, ano, alunos) {
 function fecharModal() {
   document.getElementById("modal").style.display = "none";
 }
+  // filtrar calendario
+function filtrarAlunosParaCalendario() {
 
+  return alunosGlobal.filter(a => {
+
+    const segmento = (a.segmento || "").toLowerCase().trim();
+
+    if (filtroAtual === "todos") return true;
+
+    return segmento === filtroAtual;
+  });
+
+}
 
 // GERAR CALENDÁRIO
 function gerarCalendario(mes, ano, dados) {
