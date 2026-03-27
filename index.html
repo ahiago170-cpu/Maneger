@@ -399,6 +399,7 @@ function filtrar(tipo) {
 
 document.getElementById("nomeFiltro").innerText = nomes[tipo] || tipo;
 document.getElementById("qtdFiltro").innerText = filtrados.length;
+  
   const busca = document.getElementById("buscaNome").value.toLowerCase().trim();
   const lista = document.getElementById("listaFiltro");
 
@@ -421,9 +422,20 @@ document.getElementById("qtdFiltro").innerText = filtrados.length;
   });
 
   if (filtrados.length === 0) {
-    lista.innerHTML = "Nenhum aluno encontrado";
-    return;
-  }
+  lista.innerHTML = "Nenhum aluno encontrado";
+} else {
+  filtrados.forEach(a => {
+
+    let texto = "👤 " + a.aluno;
+
+    if (a.curso) texto += " - " + a.curso;
+
+    if (a.inicio && a.fim)
+      texto += " (" + a.inicio.substring(0,5) + " - " + a.fim.substring(0,5) + ")";
+
+    lista.innerHTML += texto + "<br>";
+  });
+}
 
   filtrados.forEach(a => {
 
