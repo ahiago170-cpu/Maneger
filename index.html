@@ -137,11 +137,11 @@ body {
 
   <br><br>
 
-  <button onclick="filtrar('todos')">Todos</button>
-  <button onclick="filtrar('integral')">Integral</button>
-  <button onclick="filtrar('extra')">Extra</button>
-  <button onclick="filtrar('quadra')">Quadra</button>
-  <button onclick="filtrar('l/c')">L/C</button>
+<button onclick="filtrar('todos', event)">Todos</button>
+<button onclick="filtrar('integral', event)">Integral</button>
+<button onclick="filtrar('extra', event)">Extra</button>
+<button onclick="filtrar('quadra', event)">Quadra</button>
+<button onclick="filtrar('l/c', event)">L/C</button>
 
 </div>
 <p>Atualizado: <span id="hora"></span></p>
@@ -348,12 +348,14 @@ alunosComErro.forEach(a => {
     // gerar calendário com dados da API
     const hoje = new Date();
     gerarCalendario(hoje.getMonth(), hoje.getFullYear(), alunos);
-
+  // 🔥 ATUALIZA FILTRO AUTOMATICAMENTE
+  filtrar(filtroAtual);
   } catch (erro) {
     console.error("Erro API:", erro);
   }
+
 }
- function filtrar(tipo) {
+ function filtrar(tipo,event) {
 
   filtroAtual = tipo; // 🔥 salva o filtro atual
 
