@@ -168,8 +168,9 @@ body {
   <!-- FILTRO NA ESQUERDA -->
   <div class="filtroLateral">
     <div class="area">
-      <div class="titulo" id="tituloFiltro">
-  Filtro: Todos (<span id="qtdFiltro">0</span>)
+  <div class="titulo" id="tituloFiltro">
+  Filtro: <span id="nomeFiltro">Todos</span> 
+  (<span id="qtdFiltro">0</span>)
 </div>
       <div class="lista" id="listaFiltro"></div>
     </div>
@@ -386,9 +387,18 @@ alunosComErro.forEach(a => {
 
 }
 function filtrar(tipo) {
-
+   
   filtroAtual = tipo;
+  const nomes = {
+  "todos": "Todos",
+  "integral": "Integral",
+  "extra": "Extra",
+  "quadra": "Quadra",
+  "l/c": "L/C"
+};
 
+document.getElementById("nomeFiltro").innerText = nomes[tipo] || tipo;
+document.getElementById("qtdFiltro").innerText = filtrados.length;
   const busca = document.getElementById("buscaNome").value.toLowerCase().trim();
   const lista = document.getElementById("listaFiltro");
 
@@ -426,9 +436,8 @@ function filtrar(tipo) {
 
     lista.innerHTML += texto + "<br>";
   });
-document.getElementById("qtdFiltro").innerText = filtrados.length;
-document.getElementById("tituloFiltro").innerHTML =
-"Filtro: " + formatarNome(tipo) + " (<span id='qtdFiltro'>" + filtrados.length + "</span>)";
+
+
 }
   
 function abrirModal(dia, mes, ano, alunos) {
