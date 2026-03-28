@@ -144,7 +144,6 @@ async function atualizarPainel() {
     const resposta = await fetch(URL);
     alunosGlobal = await resposta.json();
     
-    // Atualiza Pátio (Erros)
     const patio = document.getElementById("alunosErro");
     patio.innerHTML = "";
     alunosGlobal.filter(a => verificarProblemas(a).length > 0).forEach(a => {
@@ -155,7 +154,6 @@ async function atualizarPainel() {
       patio.appendChild(div);
     });
 
-    // Atualiza Select de Cursos
     const select = document.getElementById("escolherCurso");
     const valorAntigo = select.value;
     const cursos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c))];
@@ -185,7 +183,6 @@ function renderizarCaixasSegmentos() {
         let inicio = item.inicio ? item.inicio.substring(0,5) : "--:--";
         let fim = item.fim ? item.fim.substring(0,5) : "--:--";
 
-        // MOLDURA PARA OS CAMPOS 1, 2, 3 e 4
         let txtComum = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
                 👤 <b>${alunoNome}</b> (${inicio}-${fim})<br>
@@ -197,7 +194,6 @@ function renderizarCaixasSegmentos() {
         else if(seg === "quadra") qua.push(txtComum);
         else if(seg === "l/c") lc.push(txtComum);
         
-        // MOLDURA PARA O CAMPO 5 (DATA)
         let dataExibicao = item.dia ? item.dia : (item.diasSemana || "---");
         let txtDia = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
@@ -247,7 +243,6 @@ function gerarCalendario(mes, ano, dados) {
   calendario.innerHTML = "";
   const diasSemanaNomes = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   
-  // Cabeçalho do calendário
   diasSemanaNomes.forEach(d => {
     const div = document.createElement("div"); 
     div.className="dia-cell"; div.style.fontWeight="bold"; div.style.minHeight="20px"; div.innerText=d;
@@ -257,52 +252,47 @@ function gerarCalendario(mes, ano, dados) {
   const primeiroDia = new Date(ano, mes, 1).getDay();
   const ultimoDia = new Date(ano, mes + 1, 0).getDate();
 
-  // Espaços vazios antes do dia 1
   for (let i = 0; i < primeiroDia; i++) {
     const v = document.createElement("div"); v.className="dia-cell"; v.style.background="#f0f0f0";
     calendario.appendChild(v);
   }
 
-  // Preenchimento dos dias
   for (let dia = 1; dia <= ultimoDia; dia++) {
     const divDia = document.createElement("div"); 
     divDia.className = "dia-cell";
     divDia.innerHTML = `<h4>${dia}</h4>`;
     
-    // --- LÓGICA PERFEITA DE FILTRAGEM ---
     const alunosDoDia = dados.filter(a => {
-      
-      // 1. CHECAGEM DE DATA FIXA (Ex: 12-03-2026)
+      let condicaoDiaFixo = false;
+      let condicaoRecorrencia = false;
+
+      // 1. CHECAGEM DE DATA FIXA (Somente para o dia específico)
       if (a.dia && String(a.dia).trim() !== "") {
           let partes = a.dia.split("-");
           let d, m, y;
-          
-          // Suporta tanto 2026-03-12 quanto 12-03-2026
           if (partes[0].length === 4) { [y, m, d] = partes; } 
           else { [d, m, y] = partes; }
 
-          // Só retorna TRUE se o dia, o mês e o ano forem IDÊNTICOS ao que o calendário está gerando
-          return parseInt(d) === dia && (parseInt(m) - 1) === mes && parseInt(y) === ano;
+          if (parseInt(d) === dia && (parseInt(m) - 1) === mes && parseInt(y) === ano) {
+              condicaoDiaFixo = true;
+          }
       }
       
-      // 2. CHECAGEM DE RECORRÊNCIA (Só entra aqui se NÃO tiver data fixa)
+      // 2. CHECAGEM DE RECORRÊNCIA (Aparece em todos os meses nos dias da semana definidos)
       if (a.diasSemana && String(a.diasSemana).trim() !== "") {
           const dataCelular = new Date(ano, mes, dia);
-          const dSem = dataCelular.getDay(); // Retorna 0 (Dom) até 6 (Sáb)
+          const dSem = dataCelular.getDay(); 
+          const map = {"DOM": 0, "SEG": 1, "TER": 2, "QUA": 3, "QUI": 4, "SEX": 5, "SAB": 6};
           
-          const map = {
-            "DOM": 0, "SEG": 1, "TER": 2, "QUA": 3, 
-            "QUI": 4, "SEX": 5, "SAB": 6
-          };
-
-          // Verifica se o dia da semana da célula (0-6) está na lista do aluno (ex: "SEG-TER")
-          return a.diasSemana.split("-").some(ds => map[ds.trim().toUpperCase()] === dSem);
+          if (a.diasSemana.split("-").some(ds => map[ds.trim().toUpperCase()] === dSem)) {
+              condicaoRecorrencia = true;
+          }
       }
 
-      return false;
+      // Se atender a QUALQUER uma das duas condições, o aluno aparece no dia
+      return condicaoDiaFixo || condicaoRecorrencia;
     });
 
-    // Se houver alunos, cria a bolinha/marcador
     if (alunosDoDia.length > 0) {
       const tag = document.createElement("div");
       tag.className = "marcador-aluno";
@@ -352,12 +342,10 @@ async function salvarRelatorioNoSheets() {
     const btn = document.getElementById("btnSalvar");
     if(!curso) return alert("Escolha o curso!");
     btn.disabled = true; btn.innerText = "⏳ Enviando...";
-
     let dados = [];
     document.querySelectorAll(".sel-presenca").forEach(sel => {
         dados.push({ nome: sel.dataset.aluno, presenca: sel.value, curso: curso, data: new Date().toLocaleDateString() });
     });
-
     try {
         await fetch(URL, { method: 'POST', body: JSON.stringify({ alunos: dados }) });
         alert("Salvo com sucesso!");
