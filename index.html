@@ -296,12 +296,13 @@ function gerarChamada() {
   });
 }
 async function confirmarChamada() {
+  // Captura a lista de presenças
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => ({
     nome: sel.dataset.nome,
     status: sel.value
   }));
 
-  if(presencas.length === 0){
+  if (presencas.length === 0) {
     alert("Escolha um segmento primeiro!");
     return;
   }
@@ -322,21 +323,27 @@ async function confirmarChamada() {
     y += 10;
   });
 
-  // Salvar PDF no Drive via API do Google Apps Script
+  // Converter PDF para ArrayBuffer
   const pdfBlob = doc.output('blob');
-
-  const formData = new FormData();
-  formData.append("arquivo", pdfBlob, "lista_chamada.pdf");
+  const arrayBuffer = await pdfBlob.arrayBuffer();
 
   try {
-    const res = await fetch(URL, { method: "POST", body: formData });
-    if(res.ok){
+    // Enviar PDF diretamente para a API
+    const res = await fetch(URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/pdf" },
+      body: arrayBuffer
+    });
+
+    if (res.ok) {
       alert("Chamada registrada e PDF enviado para o Drive!");
     } else {
+      const texto = await res.text();
+      console.error("Erro ao enviar PDF:", texto);
       alert("Erro ao enviar PDF");
     }
-  } catch(e){
-    console.error(e);
+  } catch (e) {
+    console.error("Erro ao enviar PDF:", e);
     alert("Erro ao enviar PDF");
   }
 }
