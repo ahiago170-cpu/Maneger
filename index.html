@@ -340,17 +340,45 @@ function gerarListaParaChamada() {
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const btn = document.getElementById("btnSalvar");
+    
     if(!curso) return alert("Escolha o curso!");
-    btn.disabled = true; btn.innerText = "⏳ Enviando...";
+    
+    btn.disabled = true; 
+    btn.innerText = "⏳ Enviando...";
+
     let dados = [];
+    
+    // Pegamos todos os selects de presença na tela
     document.querySelectorAll(".sel-presenca").forEach(sel => {
-        dados.push({ nome: sel.dataset.aluno, presenca: sel.value, curso: curso, data: new Date().toLocaleDateString() });
+        const nomeAluno = sel.dataset.aluno;
+        
+        // Buscamos o aluno no nosso "banco de dados" global para pegar o Segmento e o Prof
+        const infoOriginal = alunosGlobal.find(a => a.aluno === nomeAluno);
+
+        dados.push({ 
+            nome: nomeAluno, 
+            presenca: sel.value, 
+            curso: curso, 
+            data: new Date().toLocaleDateString('pt-BR'),
+            // Se encontrar o aluno, envia os dados dele, senão envia vazio
+            segmento: infoOriginal ? infoOriginal.segmento : "S/S", 
+            prof: infoOriginal ? infoOriginal.prof : "Sem Prof."
+        });
     });
+
     try {
-        await fetch(URL, { method: 'POST', body: JSON.stringify({ alunos: dados }) });
-        alert("Salvo com sucesso!");
-    } catch (e) { alert("Erro ao salvar."); }
-    btn.disabled = false; btn.innerText = "Confirmar e Salvar no Sheets 📊";
+        const resposta = await fetch(URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ alunos: dados }) 
+        });
+        const resultado = await resposta.text();
+        alert(resultado);
+    } catch (e) { 
+        alert("Erro ao salvar: " + e.message); 
+    }
+    
+    btn.disabled = false; 
+    btn.innerText = "Confirmar e Salvar no Sheets 📊";
 }
 
 document.getElementById("buscaNome").addEventListener("input", () => filtrar(filtroAtual));
