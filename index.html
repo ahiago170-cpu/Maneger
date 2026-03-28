@@ -6,7 +6,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-/* ESTILOS MANTIDOS */
+/* SEU ESTILO ORIGINAL MANTIDO */
 .topo-container { display: flex; justify-content: center; align-items: flex-start; gap: 30px; }
 .imagem-lateral img { width: 250px; border: 2px solid #333; border-radius: 10px; }
 .layoutPrincipal { display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-top: 20px; }
@@ -176,70 +176,64 @@ function renderizarCaixasSegmentos() {
     let totalErros = 0;
 
     alunosGlobal.forEach(item => {
-        // Conta os erros de preenchimento para exibir no resumo (CAMPO 6)
-        if (verificarProblemas(item).length > 0) {
-            totalErros++;
-        }
+        if (verificarProblemas(item).length > 0) totalErros++;
 
         let seg = (item.segmento || "").toLowerCase();
-        
-        // Tratamento dos dados para as caixas
         let alunoNome = item.aluno || "Sem Nome";
-        let curso = item.curso || "Sem curso";
+        let curso = item.curso || "S/C";
+        let prof = item.prof || "Sem Professor";
         let inicio = item.inicio ? item.inicio.substring(0,5) : "--:--";
         let fim = item.fim ? item.fim.substring(0,5) : "--:--";
 
-        // MOLDURA PARA OS CAMPOS 1, 2, 3 e 4 (Aluno + Inicio e Fim + Curso)
-        let txtCaixaComum = `
+        // CAMPOS 1, 2, 3 e 4 (Alunos + Inicio/Fim + Curso + Professor)
+        let txtComum = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
-                👤 <b>${alunoNome}</b> (${inicio} às ${fim})<br>
-                📘 ${curso}
+                👤 <b>${alunoNome}</b> (${inicio} - ${fim})<br>
+                📘 ${curso} | 👨‍🏫 <b>${prof}</b>
             </div>`;
 
-        if(seg === "integral") int.push(txtCaixaComum);
-        else if(seg === "extra") ext.push(txtCaixaComum);
-        else if(seg === "quadra") qua.push(txtCaixaComum);
-        else if(seg === "l/c" || seg === "lição de casa") lc.push(txtCaixaComum);
+        if(seg === "integral") int.push(txtComum);
+        else if(seg === "extra") ext.push(txtComum);
+        else if(seg === "quadra") qua.push(txtComum);
+        else if(seg === "l/c") lc.push(txtComum);
         
-        // TRATAMENTO DA DATA PARA O CAMPO 5
-        let dataFormatada = "Sem data";
-        if (item.dia && item.dia.includes("-")) {
+        // CAMPO 5 (Aluno + Dia + Curso + Professor)
+        let dataTexto = "Sem data";
+        if (item.dia) {
+            // Tenta formatar se vier no padrão 2026-03-12 ou 12-03-2026
             let partes = item.dia.split("-");
-            dataFormatada = partes[1] + "/" + partes[2].substring(0, 2);
-        } else if (item.dia) {
-            dataFormatada = item.dia;
+            if(partes.length === 3) {
+                // Se o primeiro item tiver 4 digitos é YYYY-MM-DD
+                dataTexto = partes[0].length === 4 ? `${partes[2]}/${partes[1]}` : `${partes[0]}/${partes[1]}`;
+            } else {
+                dataTexto = item.dia;
+            }
         } else if (item.diasSemana) {
-            dataFormatada = item.diasSemana;
+            dataTexto = item.diasSemana;
         }
-        
-        // MOLDURA PARA O CAMPO 5 (Aluno + Dia + Curso)
-        let txtCampo5 = `
+
+        let txtDia = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
-                👤 <b>${alunoNome}</b> | 📅 ${dataFormatada}<br>
-                📘 ${curso}
+                👤 <b>${alunoNome}</b> | 📅 <b>${dataTexto}</b><br>
+                📘 ${curso} | 👨‍🏫 ${prof}
             </div>`;
-        
-        diaC.push(txtCampo5);
+        diaC.push(txtDia);
     });
     
-    // Inserindo dados nas caixas
     document.getElementById("listaIntegral").innerHTML = int.join("");
     document.getElementById("listaExtra").innerHTML = ext.join("");
     document.getElementById("listaQuadra").innerHTML = qua.join("");
     document.getElementById("listaLC").innerHTML = lc.join("");
     document.getElementById("listaDia").innerHTML = diaC.join("");
     
-    // MOLDURA PARA O CAMPO 6 (Resumo Geral de Seguimentos + Total de Erros no Pátio)
+    // CAMPO 6
     document.getElementById("resumo").innerHTML = `
-        <div style="line-height: 1.6; font-size: 15px;">
-            <strong>Total Geral de Alunos:</strong> ${alunosGlobal.length}<br><br>
-            <strong>Integral:</strong> ${int.length}<br>
-            <strong>Extra:</strong> ${ext.length}<br>
-            <strong>Quadra:</strong> ${qua.length}<br>
-            <strong>Lição de Casa:</strong> ${lc.length}<br><br>
-            <strong style="color: red;">🚨 Erros no Pátio: ${totalErros}</strong>
-        </div>
-    `;
+        <div style="text-align:left; font-size:14px;">
+            Total Alunos: ${alunosGlobal.length}<br>
+            Integral: ${int.length} | Extra: ${ext.length}<br>
+            Quadra: ${qua.length} | L/C: ${lc.length}<br>
+            <strong style="color:red;">🚨 Erros no Pátio: ${totalErros}</strong>
+        </div>`;
 }
 
 function filtrar(tipo) {
@@ -283,10 +277,9 @@ function gerarListaParaChamada() {
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const btn = document.getElementById("btnSalvar");
-    
     if(!curso) return alert("Selecione um curso para fazer a chamada!");
 
-    btn.innerText = "⏳ Gravando na Planilha...";
+    btn.innerText = "⏳ Gravando...";
     btn.disabled = true;
 
     const dataHoje = new Date().toLocaleDateString();
@@ -295,40 +288,25 @@ async function salvarRelatorioNoSheets() {
     document.querySelectorAll(".sel-presenca").forEach(select => {
         const nome = select.getAttribute("data-aluno");
         const presenca = select.value;
-        const infoAluno = alunosGlobal.find(a => a.aluno === nome) || {};
+        const info = alunosGlobal.find(a => a.aluno === nome) || {};
 
         dadosParaEnviar.push({
             nome: nome,
-            segmento: infoAluno.segmento || "",
+            segmento: info.segmento || "",
             presenca: presenca,
             data: dataHoje
         });
     });
-
-    if (dadosParaEnviar.length === 0) {
-        alert("Não há alunos na lista para salvar.");
-        btn.disabled = false;
-        return;
-    }
 
     try {
         const response = await fetch(URL, {
             method: 'POST',
             body: JSON.stringify({ alunos: dadosParaEnviar })
         });
-
         const texto = await response.text();
-        
-        if (texto.includes("✅")) {
-            alert(texto);
-            document.getElementById("listaChamadaAlunos").innerHTML = "";
-            document.getElementById("escolherCurso").value = "";
-        } else {
-            alert("Erro ao salvar: " + texto);
-        }
+        alert(texto);
     } catch (e) {
-        alert("Erro de conexão com o Google Sheets.");
-        console.error(e);
+        alert("Erro ao conectar.");
     } finally {
         btn.innerText = "Confirmar e Salvar no Sheets 📊";
         btn.disabled = false;
@@ -356,7 +334,7 @@ function gerarCalendario(mes, ano, dados) {
     const divDia = document.createElement("div"); divDia.className="dia";
     divDia.innerHTML = `<h4>${dia}</h4>`;
     const alunosDoDia = dados.filter(a => {
-      if (a.dia && a.dia.split("-")[2] == dia) return true;
+      if (a.dia && a.dia.includes(String(dia).padStart(2,'0'))) return true;
       if (a.diasSemana) {
         const dSem = new Date(ano, mes, dia).getDay();
         const map = {"DOM":0,"SEG":1,"TER":2,"QUA":3,"QUI":4,"SEX":5,"SAB":6};
