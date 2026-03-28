@@ -282,9 +282,13 @@ function verificarProblemas(aluno) {
     erros.push("Curso não definido");
   }
 
+  
+  if (!aluno.inicio|| aluno.curso.trim() === "") {
+    erros.push("inicio não definido");
+  }
   // Pode adicionar mais regras, por exemplo:
-  // if (!aluno.dia) erros.push("Data não definida");
-  // if (!aluno.inicio || !aluno.fim) erros.push("Horário incompleto");
+   if (!aluno.dia) erros.push("Data não definida");
+   if (!aluno.inicio || !aluno.fim) erros.push("Horário incompleto");
 
   return erros;
 }
