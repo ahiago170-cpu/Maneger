@@ -323,7 +323,7 @@ window.confirmarChamada = function() {
 
     return {
       nome: String(aluno.aluno || sel.dataset.nome || "-"),
-      presenca: sel.value === "v" ? "✅ Presente" : "❌ Faltou",
+      presenca: sel.value === "v" ? "✅" : "❌",
       segmento: String(aluno.segmento || "-"),
       dia: String(aluno.dia || new Date().toISOString().split("T")[0]),
       inicio: String(aluno.inicio || "-"),
@@ -348,11 +348,11 @@ window.confirmarChamada = function() {
   // largura das colunas proporcional
   const colWidths = {
     nome: 0.25 * usableWidth,
-    presenca: 0.12 * usableWidth,
+    presenca: 0.10 * usableWidth,
     horario: 0.15 * usableWidth,
-    curso: 0.15 * usableWidth,
-    segmento: 0.12 * usableWidth,
-    professor: 0.21 * usableWidth
+    curso: 0.20 * usableWidth,
+    segmento: 0.15 * usableWidth
+    // professor não entra na linha, vai no topo
   };
 
   let y = 40;
@@ -362,12 +362,14 @@ window.confirmarChamada = function() {
   doc.setFontSize(12);
   doc.text(`Segmento: ${presencas[0].segmento}`, margin, y);
   doc.text(`Data: ${presencas[0].dia}`, pageWidth - margin, y, { align: "right" });
-  y += 30;
+  y += 15;
+  doc.text(`Professor: ${presencas[0].professor}`, margin, y);
+  y += 25;
 
   // Cabeçalho da tabela
   doc.setFont(undefined, "bold");
   let x = margin;
-  ["Nome", "Presença", "Horário", "Curso", "Segmento", "Professor"].forEach((text, i) => {
+  ["Nome", "Presença", "Horário", "Curso", "Segmento"].forEach((text, i) => {
     doc.text(text, x, y);
     x += Object.values(colWidths)[i];
   });
@@ -382,8 +384,7 @@ window.confirmarChamada = function() {
       p.presenca,
       `${p.inicio} - ${p.fim}`,
       p.curso,
-      p.segmento,
-      p.professor
+      p.segmento
     ].forEach((valor, i) => {
       doc.text(String(valor || "-"), x, y);
       x += Object.values(colWidths)[i];
@@ -399,7 +400,7 @@ window.confirmarChamada = function() {
   });
 
   doc.save("lista_chamada.pdf");
-  alert("PDF gerado-Envie a coordenação ⚠️");
+  alert("PDF gerado corretamente na folha A4!");
 };
 // LIMPAR HORA
 
