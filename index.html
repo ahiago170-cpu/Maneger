@@ -210,12 +210,16 @@ async function imprimirPDF() {
     const dataHoje = new Date().toLocaleDateString();
     const nomeArq = `Chamada_${curso}_${dataHoje.replace(/\//g,'-')}.pdf`;
 
-    // Desenha o PDF
-    doc.setFontSize(14); doc.text("LISTA DE CHAMADA - " + curso, 105, 15, {align:"center"});
-    doc.setFontSize(10); doc.text("Data: " + dataHoje, 10, 25);
+    // --- DESENHO DO PDF ---
+    doc.setFontSize(14); 
+    doc.text("LISTA DE CHAMADA - " + curso, 105, 15, {align:"center"});
+    doc.setFontSize(10); 
+    doc.text("Data: " + dataHoje, 10, 25);
     
     let y = 35;
-    doc.text("NOME", 10, y); doc.text("SEGMENTO", 80, y); doc.text("PRESENÇA", 170, y);
+    doc.text("NOME", 10, y); 
+    doc.text("SEGMENTO", 80, y); 
+    doc.text("PRESENÇA", 170, y);
     doc.line(10, y+2, 200, y+2);
     y += 10;
 
@@ -229,21 +233,34 @@ async function imprimirPDF() {
         if(y > 280) { doc.addPage(); y = 20; }
     });
 
-    // 1. BAIXA NO COMPUTADOR
+    // 1. BAIXA NO COMPUTADOR (Sempre faz o download)
     doc.save(nomeArq);
 
     // 2. ENVIA PARA O DRIVE
     const pdfBase64 = doc.output('datauristring').split(',')[1];
 
     try {
+        // Mudamos para 'cors' para podermos ler a resposta do Google
         const resp = await fetch(URL, {
             method: 'POST',
-            body: JSON.stringify({ pdf: pdfBase64, nomeArquivo: nomeArq })
+            body: JSON.stringify({ 
+                pdf: pdfBase64, 
+                nomeArquivo: nomeArq 
+            })
         });
-        const texto = await resp.text();
-        alert("✅ PDF baixado e salvo no seu Google Drive!");
+
+        const textoRetorno = await resp.text();
+
+        if (textoRetorno.includes("Erro") || textoRetorno.includes("ERRO")) {
+            alert("⚠️ O PDF baixou, mas o Google Drive deu este erro: " + textoRetorno);
+        } else {
+            alert("✅ PDF baixado e salvo na pasta do Drive com sucesso!");
+        }
+
     } catch (e) {
-        alert("❌ Erro ao salvar no Drive, mas o PDF foi baixado.");
+        // Se cair aqui, é erro de rede ou URL errada
+        alert("❌ Erro de conexão: O site não conseguiu falar com o Google. Verifique a URL do Script.");
+        console.error(e);
     } finally {
         btn.innerText = "Confirmar e Salvar no Drive ☁️";
         btn.disabled = false;
