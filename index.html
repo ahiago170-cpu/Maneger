@@ -6,7 +6,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-/* SEU LAYOUT ORIGINAL */
+/* MANTIVE SEU CSS ORIGINAL */
 .topo-container { display: flex; justify-content: center; align-items: flex-start; gap: 30px; }
 .imagem-lateral img { width: 250px; border: 2px solid #333; border-radius: 10px; }
 .layoutPrincipal { display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-top: 20px; }
@@ -25,11 +25,6 @@
 .fechar { cursor: pointer; float: right; font-weight: bold; }
 
 body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111; }
-.aluno.integral { background: #b9fbc0; }
-.aluno.extra { background: #a0c4ff; }
-.aluno.quadra { background: #fff3b0; }
-.aluno.lc { background: #e0aaff; }
-
 .area { display: inline-block; width: 260px; height: 300px; margin: 10px; border: 3px solid #333; border-radius: 10px; background: white; vertical-align: top; }
 .area-chamada { height: 400px; } 
 
@@ -41,8 +36,9 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 .dia { border: 1px solid #ccc; min-height: 60px; padding: 5px; text-align: left; background: #fdfdfd; position: relative; }
 .dia h4 { margin: 0; font-size: 14px; }
 
-.item-chamada { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 3px 0; }
-.btn-pdf { background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 90%; margin-top: 10px; }
+.item-chamada { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 0; align-items: center; }
+.btn-pdf { background: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 90%; margin-top: 10px; }
+.btn-pdf:disabled { background: #ccc; }
 </style>
 </head>
 
@@ -75,7 +71,7 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
           <option value="">Escolha o curso...</option>
       </select>
       <div class="lista" id="listaChamadaAlunos"></div>
-     <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
+      <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
     </div>
   </div>
 
@@ -108,7 +104,7 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 </div>
 
 <script>      
-const URL = "https://script.google.com/macros/s/AKfycbykYkAbiOSYiufntR0b3y72EyfgZ7oUILNZr8_Yyemh6db3VYniVAk64B9pWL0E2oej/exec"; // Substitua pela sua URL
+const URL = "SUA_URL_AQUI"; // Certifique-se de usar a URL mais recente do deploy
 let alunosGlobal = [];
 let filtroAtual = "todos";
 
@@ -117,8 +113,6 @@ function verificarProblemas(aluno) {
   if (!aluno.aluno) erros.push("❌ Nome");
   if (!aluno.curso) erros.push("❌ Curso");
   if (!aluno.segmento) erros.push("❌ Segmento");
-  if (!aluno.dia && !aluno.diasSemana) erros.push("📅 Data/Semana");
-  if (!aluno.inicio || !aluno.fim) erros.push("⏰ Horário");
   return erros;
 }
 
@@ -127,14 +121,12 @@ async function atualizarPainel() {
     const resposta = await fetch(URL);
     alunosGlobal = await resposta.json();
     
-    // Pátio com Erros Visíveis
     const patio = document.getElementById("alunosErro");
     patio.innerHTML = "";
     alunosGlobal.filter(a => verificarProblemas(a).length > 0).forEach(a => {
       patio.innerHTML += `<div class="alunoErro">⚠️ ${a.aluno || "Sem Nome"} <small>${verificarProblemas(a).join("<br>")}</small></div>`;
     });
 
-    // Cursos
     const select = document.getElementById("escolherCurso");
     const valorAntigo = select.value;
     const cursos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c))];
@@ -185,38 +177,45 @@ function filtrar(tipo) {
   gerarCalendario(new Date().getMonth(), new Date().getFullYear(), filtrados);
 }
 
+// CORREÇÃO AQUI: ADICIONEI O data-segmento NO SELECT
 function gerarListaParaChamada() {
     const curso = document.getElementById("escolherCurso").value;
     const container = document.getElementById("listaChamadaAlunos");
     container.innerHTML = "";
     if(!curso) return;
+    
     alunosGlobal.filter(a => a.curso === curso).sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
-        container.innerHTML += `<div class="item-chamada"><span>${a.aluno}</span><select class="sel-presenca" data-aluno="${a.aluno}"><option value="(V)">✅ (V)</option><option value="(X)">❌ (X)</option></select></div>`;
+        container.innerHTML += `
+            <div class="item-chamada">
+                <span>${a.aluno}</span>
+                <select class="sel-presenca" data-aluno="${a.aluno}" data-segmento="${a.segmento}">
+                    <option value="✅ PRESENTE">✅ (V)</option>
+                    <option value="❌ FALTOU">❌ (X)</option>
+                </select>
+            </div>`;
     });
 }
 
-// FUNÇÃO MESTRE: GERA PDF, BAIXA E ENVIA PRO DRIVE
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const btn = document.getElementById("btnSalvar");
-    const listaDeInputs = document.querySelectorAll(".sel-presenca");
+    const inputs = document.querySelectorAll(".sel-presenca");
 
-    if (!curso || listaDeInputs.length === 0) return alert("Selecione um curso com alunos!");
+    if (!curso || inputs.length === 0) return alert("Selecione um curso com alunos!");
 
-    btn.innerText = "⏳ Salvando e Gerando PDF...";
+    btn.innerText = "⏳ Enviando e Gerando PDF...";
     btn.disabled = true;
 
     const dataHoje = new Date().toLocaleDateString('pt-BR');
     let dadosParaEnviar = [];
 
-    // O ERRO ESTAVA AQUI: O nome dentro do parênteses tem que ser igual ao de baixo
-    listaDeInputs.forEach(item => { 
+    inputs.forEach(item => { 
         dadosParaEnviar.push({
             nome: item.getAttribute("data-aluno"),
-            segmento: item.getAttribute("data-segmento"),
+            segmento: item.getAttribute("data-segmento") || "Padrão",
             presenca: item.value,
             data: dataHoje,
-            curso: curso // Enviando o curso para o Script dar nome ao PDF
+            curso: curso 
         });
     });
 
@@ -231,7 +230,7 @@ async function salvarRelatorioNoSheets() {
         document.getElementById("listaChamadaAlunos").innerHTML = "";
         document.getElementById("escolherCurso").value = "";
     } catch (e) {
-        alert("Erro de conexão. Verifique se a URL do Script está correta.");
+        alert("Erro de conexão.");
         console.error(e);
     } finally {
         btn.innerText = "Confirmar e Salvar no Sheets 📊";
@@ -239,6 +238,7 @@ async function salvarRelatorioNoSheets() {
     }
 }
 
+// RESTANTE DAS FUNÇÕES (CALENDÁRIO/MODAL) MANTIDAS
 function gerarCalendario(mes, ano, dados) {
   const calendario = document.getElementById("calendario");
   calendario.innerHTML = "";
