@@ -199,38 +199,53 @@ function gerarListaParaChamada() {
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const btn = document.getElementById("btnSalvar");
-    const inputs = document.querySelectorAll(".sel-presenca");
+    
+    if(!curso) return alert("Selecione um curso para fazer a chamada!");
 
-    if (!curso || inputs.length === 0) return alert("Selecione um curso com alunos!");
-
-    btn.innerText = "⏳ Enviando e Gerando PDF...";
+    btn.innerText = "⏳ Gravando na Planilha...";
     btn.disabled = true;
 
-    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    const dataHoje = new Date().toLocaleDateString();
     let dadosParaEnviar = [];
 
-    inputs.forEach(item => { 
+    // Coleta os dados de cada linha da chamada
+    document.querySelectorAll(".sel-presenca").forEach(select => {
+        const nome = select.getAttribute("data-aluno");
+        const presenca = select.value;
+        const infoAluno = alunosGlobal.find(a => a.aluno === nome) || {};
+
         dadosParaEnviar.push({
-            nome: item.getAttribute("data-aluno"),
-            segmento: item.getAttribute("data-segmento") || "Padrão",
-            presenca: item.value,
-            data: dataHoje,
-            curso: curso 
+            nome: nome,
+            segmento: infoAluno.segmento || "",
+            presenca: presenca,
+            data: dataHoje
         });
     });
+
+    if (dadosParaEnviar.length === 0) {
+        alert("Não há alunos na lista para salvar.");
+        btn.disabled = false;
+        return;
+    }
 
     try {
         const response = await fetch(URL, {
             method: 'POST',
             body: JSON.stringify({ alunos: dadosParaEnviar })
         });
-        const resultado = await response.text();
-        alert(resultado); 
+
+        const texto = await response.text();
         
-        document.getElementById("listaChamadaAlunos").innerHTML = "";
-        document.getElementById("escolherCurso").value = "";
+        if (texto.includes("✅")) {
+            alert(texto);
+            // Opcional: limpar a lista após salvar
+            document.getElementById("listaChamadaAlunos").innerHTML = "";
+            document.getElementById("escolherCurso").value = "";
+        } else {
+            alert("Erro ao salvar: " + texto);
+        }
     } catch (e) {
-        alert("Erro de conexão.");
+        alert("Erro de conexão com o Google Sheets.");
         console.error(e);
     } finally {
         btn.innerText = "Confirmar e Salvar no Sheets 📊";
