@@ -75,7 +75,7 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
           <option value="">Escolha o curso...</option>
       </select>
       <div class="lista" id="listaChamadaAlunos"></div>
-      <button id="btnSalvar" class="btn-pdf" onclick="imprimirPDF()">Confirmar e Salvar no Drive ☁️</button>
+     <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
     </div>
   </div>
 
@@ -196,73 +196,59 @@ function gerarListaParaChamada() {
 }
 
 // FUNÇÃO MESTRE: GERA PDF, BAIXA E ENVIA PRO DRIVE
-async function imprimirPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const btn = document.getElementById("btnSalvar");
     
-    if(!curso) return alert("Selecione um curso!");
+    if(!curso) return alert("Selecione um curso para fazer a chamada!");
 
-    btn.innerText = "⏳ Enviando ao Drive...";
+    btn.innerText = "⏳ Gravando na Planilha...";
     btn.disabled = true;
 
     const dataHoje = new Date().toLocaleDateString();
-    const nomeArq = `Chamada_${curso}_${dataHoje.replace(/\//g,'-')}.pdf`;
+    let dadosParaEnviar = [];
 
-    // --- DESENHO DO PDF ---
-    doc.setFontSize(14); 
-    doc.text("LISTA DE CHAMADA - " + curso, 105, 15, {align:"center"});
-    doc.setFontSize(10); 
-    doc.text("Data: " + dataHoje, 10, 25);
-    
-    let y = 35;
-    doc.text("NOME", 10, y); 
-    doc.text("SEGMENTO", 80, y); 
-    doc.text("PRESENÇA", 170, y);
-    doc.line(10, y+2, 200, y+2);
-    y += 10;
+    // Coleta os dados de cada linha da chamada
+    document.querySelectorAll(".sel-presenca").forEach(select => {
+        const nome = select.getAttribute("data-aluno");
+        const presenca = select.value;
+        const infoAluno = alunosGlobal.find(a => a.aluno === nome) || {};
 
-    document.querySelectorAll(".sel-presenca").forEach(s => {
-        const nome = s.getAttribute("data-aluno");
-        const dados = alunosGlobal.find(a => a.aluno === nome) || {};
-        doc.text(nome, 10, y);
-        doc.text(String(dados.segmento || ""), 80, y);
-        doc.text(s.value, 175, y);
-        y += 10;
-        if(y > 280) { doc.addPage(); y = 20; }
+        dadosParaEnviar.push({
+            nome: nome,
+            segmento: infoAluno.segmento || "",
+            presenca: presenca,
+            data: dataHoje
+        });
     });
 
-    // 1. BAIXA NO COMPUTADOR (Sempre faz o download)
-    doc.save(nomeArq);
-
-    // 2. ENVIA PARA O DRIVE
-    const pdfBase64 = doc.output('datauristring').split(',')[1];
+    if (dadosParaEnviar.length === 0) {
+        alert("Não há alunos na lista para salvar.");
+        btn.disabled = false;
+        return;
+    }
 
     try {
-        // Mudamos para 'cors' para podermos ler a resposta do Google
-        const resp = await fetch(URL, {
+        const response = await fetch(URL, {
             method: 'POST',
-            body: JSON.stringify({ 
-                pdf: pdfBase64, 
-                nomeArquivo: nomeArq 
-            })
+            body: JSON.stringify({ alunos: dadosParaEnviar })
         });
 
-        const textoRetorno = await resp.text();
-
-        if (textoRetorno.includes("Erro") || textoRetorno.includes("ERRO")) {
-            alert("⚠️ O PDF baixou, mas o Google Drive deu este erro: " + textoRetorno);
+        const texto = await response.text();
+        
+        if (texto.includes("✅")) {
+            alert(texto);
+            // Opcional: limpar a lista após salvar
+            document.getElementById("listaChamadaAlunos").innerHTML = "";
+            document.getElementById("escolherCurso").value = "";
         } else {
-            alert("✅ PDF baixado e salvo na pasta do Drive com sucesso!");
+            alert("Erro ao salvar: " + texto);
         }
-
     } catch (e) {
-        // Se cair aqui, é erro de rede ou URL errada
-        alert("❌ Erro de conexão: O site não conseguiu falar com o Google. Verifique a URL do Script.");
+        alert("Erro de conexão com o Google Sheets.");
         console.error(e);
     } finally {
-        btn.innerText = "Confirmar e Salvar no Drive ☁️";
+        btn.innerText = "Confirmar e Salvar no Sheets 📊";
         btn.disabled = false;
     }
 }
