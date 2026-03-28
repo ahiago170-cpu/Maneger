@@ -157,7 +157,7 @@ body {
 
 <body>
 
-<select id="selecionaSegmento" onchange="gerarChamada()">
+<select id="selecionaCurso" onchange="gerarChamada()">
   <option value="">Escolha o curso</option>
 </select>
   
@@ -192,11 +192,18 @@ body {
     </div>
     
   <!-- lista de chamada telinha -->
-<div class="area">
+  </div>
+  <div class="area">
   <div class="titulo">Lista de Chamada</div>
   <select id="selecionaSegmento" onchange="gerarChamada()">
-    <option value="">Escolha o curso</option>
-    <!-- Cursos serão adicionados dinamicamente pelo JS -->
+    <option value="">Escolha o segmento</option>
+    <option value="integral">Hockey</option>
+    <option value="extra">Piano</option>
+    <option value="quadra">Tennis</option>
+    <option value="l/c">Patinação</option>
+    <option value="l/c">Natação</option>
+    <option value="l/c">lições</option>
+    <option value="l/c">Integral</option>
   </select>
   <div id="listaChamada" class="lista" style="margin-top:10px;"></div>
   <button onclick="confirmarChamada()">Confirmar Chamada ✅</button>
@@ -287,6 +294,21 @@ function verificarProblemas(aluno) {
 
   return erros;
 }
+  // Atualiza o select com os cursos disponíveis nos dados
+function atualizarCursos() {
+  const select = document.getElementById("selecionaCurso");
+  select.innerHTML = '<option value="">Escolha o curso</option>'; // limpa
+
+  // pega cursos únicos
+  const cursosUnicos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c && c.trim() !== ""))];
+
+  cursosUnicos.forEach(curso => {
+    const option = document.createElement("option");
+    option.value = curso; // valor usado para filtrar
+    option.innerText = curso; // texto que aparece para o usuário
+    select.appendChild(option);
+  });
+}
 
 
 //oque  tem de errado com o aluno
@@ -297,6 +319,49 @@ function limpar(valor){
 // gerador de lista de chamada
 // Novo gerarChamada() filtrando por curso
 function gerarChamada() {
+  const cursoSelecionado = document.getElementById("selecionaSegmento").value; // aqui usa o mesmo select, mas agora vai ser o curso
+  const listaDiv = document.getElementById("listaChamada");
+  listaDiv.innerHTML = "";
+
+  if (!cursoSelecionado) return;
+
+  // Filtra alunos pelo curso, ignorando maiúsculas/minúsculas
+  const alunosDoCurso = alunosGlobal.filter(a => 
+    (a.curso || "").toLowerCase() === cursoSelecionado.toLowerCase()
+  );
+
+  alunosDoCurso.forEach(a => {
+    const div = document.createElement("div");
+    div.style.marginBottom = "5px";
+
+    div.innerHTML = `
+      <span>${a.aluno}</span>
+      <select class="presenca" data-nome="${a.aluno}" data-curso="${a.curso}">
+        <option value="v">✅ Presente</option>
+        <option value="x">❌ Faltou</option>
+      </select>
+    `;
+    listaDiv.appendChild(div);
+  });
+}
+// Atualiza o select com os cursos disponíveis nos dados
+function atualizarCursos() {
+  const select = document.getElementById("selecionaCurso");
+  select.innerHTML = '<option value="">Escolha o curso</option>'; // limpa
+
+  // pega cursos únicos
+  const cursosUnicos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c && c.trim() !== ""))];
+
+  cursosUnicos.forEach(curso => {
+    const option = document.createElement("option");
+    option.value = curso; // valor usado para filtrar
+    option.innerText = curso; // texto que aparece para o usuário
+    select.appendChild(option);
+  });
+}
+
+// Ajusta gerarChamada() para filtrar pelo curso
+function gerarChamada() {
   const cursoSelecionado = document.getElementById("selecionaCurso").value;
   const listaDiv = document.getElementById("listaChamada");
   listaDiv.innerHTML = "";
@@ -304,9 +369,7 @@ function gerarChamada() {
   if (!cursoSelecionado) return;
 
   // filtra alunos pelo curso
-  const alunosDoCurso = alunosGlobal.filter(a => 
-    (a.curso || "").toLowerCase() === cursoSelecionado.toLowerCase()
-  );
+  const alunosDoCurso = alunosGlobal.filter(a => (a.curso || "").toLowerCase() === cursoSelecionado.toLowerCase());
 
   alunosDoCurso.forEach(a => {
     const div = document.createElement("div");
@@ -323,7 +386,8 @@ function gerarChamada() {
   });
 }
 
-
+// Chame atualizarCursos() depois que alunosGlobal for carregado
+atualizarCursos();
 // Função de chamada apenas local
 window.confirmarChamada = function() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => {
@@ -736,7 +800,6 @@ function gerarCalendario(mes, ano, dados) {
 
 // ATUALIZA AUTOMATICAMENTE
 atualizarPainel();
-
 setInterval(atualizarPainel, 5000);
 document.getElementById("buscaNome").addEventListener("input", () => {
   filtrar(filtroAtual);
