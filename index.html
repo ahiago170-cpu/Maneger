@@ -263,7 +263,7 @@ body {
 </div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbwYIB5IDe9fQt1gTUt8J4NSnJLeFJmGu53Q7oMenTZkJgnFi8XHeopmOu_e99a0gB5y/exec"; // coloque aqui a URL da sua API
+const URL = "https://script.google.com/macros/s/AKfycbwmgCkO7h4aPbtV0YKLOBDUdb8m5nHJIOIyVWLmRjH64c7jC7BzAv1BWl6zX5qLgOci/exec"; // coloque aqui a URL da sua API
 let alunosGlobal = [];
 let filtroAtual = "todos";
 //oque  tem de errado com o aluno
@@ -309,7 +309,7 @@ async function enviarPresenca() {
   }
 
   try {
-    const res = await fetch("COLE_AQUI_A_URL_DO_SEU_APPS_SCRIPT", {
+    const res = await fetch("https://script.google.com/macros/s/AKfycbwmgCkO7h4aPbtV0YKLOBDUdb8m5nHJIOIyVWLmRjH64c7jC7BzAv1BWl6zX5qLgOci/exec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(presencas)
@@ -323,6 +323,50 @@ async function enviarPresenca() {
   } catch(e) {
     console.error(e);
     alert("Erro ao enviar os dados: " + e.message);
+  }
+}
+  async function confirmarChamada() {
+  const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => ({
+    nome: sel.dataset.nome,
+    segmento: document.getElementById("selecionaSegmento").value,
+    presenca: sel.value,
+    dia: new Date().toISOString().split("T")[0]
+  }));
+
+  if(presencas.length === 0){
+    alert("Escolha um segmento primeiro!");
+    return;
+  }
+
+  // 1️⃣ Gera PDF local
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text("Lista de Chamada", 20, 20);
+  doc.setFontSize(12);
+  doc.text("Segmento: " + presencas[0].segmento, 20, 30);
+
+  let y = 40;
+  presencas.forEach(p => {
+    doc.text(`${p.nome} - ${p.presenca === "v" ? "✅ Presente" : "❌ Faltou"}`, 20, y);
+    y += 10;
+  });
+
+  doc.save("lista_chamada.pdf"); // PDF só local
+
+  // 2️⃣ Envia para Google Sheets
+  try {
+    const res = await fetch(URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(presencas)
+    });
+    const data = await res.json();
+    if(data.status === "ok") alert("Chamada registrada no Sheets!");
+    else alert("Erro no Sheets: " + data.message);
+  } catch(e) {
+    console.error(e);
+    alert("Erro ao enviar para o Sheets: " + e.message);
   }
 }
 // LIMPAR HORA
