@@ -6,7 +6,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-/* SEU ESTILO ORIGINAL MANTIDO */
+/* ESTILOS MANTIDOS */
 .topo-container { display: flex; justify-content: center; align-items: flex-start; gap: 30px; }
 .imagem-lateral img { width: 250px; border: 2px solid #333; border-radius: 10px; }
 .layoutPrincipal { display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-top: 20px; }
@@ -23,7 +23,6 @@
   font-weight: bold; cursor: pointer; animation: pular 0.8s infinite alternate;
   text-align: left; min-width: 120px;
 }
-/* Melhoria visual para o erro aparecer debaixo do nome */
 .alunoErro small { display: block; font-weight: normal; font-size: 10px; margin-top: 4px; line-height: 1.1; }
 
 @keyframes pular { from { transform: translateY(0px); } to { transform: translateY(-10px); } }
@@ -146,7 +145,6 @@ async function atualizarPainel() {
     const resposta = await fetch(URL);
     alunosGlobal = await resposta.json();
     
-    // ATUALIZAÇÃO DO PÁTIO (Melhoria 2: Erros visíveis)
     const patio = document.getElementById("alunosErro");
     patio.innerHTML = "";
     alunosGlobal.filter(a => verificarProblemas(a).length > 0).forEach(a => {
@@ -175,19 +173,38 @@ async function atualizarPainel() {
 
 function renderizarCaixasSegmentos() {
     let int = [], ext = [], qua = [], lc = [], diaC = [];
+    let totalErros = 0;
+
     alunosGlobal.forEach(item => {
+        // Conta os erros de preenchimento para exibir no resumo (CAMPO 6)
+        if (verificarProblemas(item).length > 0) {
+            totalErros++;
+        }
+
         let seg = (item.segmento || "").toLowerCase();
-        let txt = "👤 " + item.aluno + " (" + (item.inicio || "").substring(0,5) + ")";
-        if(seg === "integral") int.push(txt);
-        else if(seg === "extra") ext.push(txt);
-        else if(seg === "quadra") qua.push(txt);
-        else if(seg === "l/c") lc.push(txt);
         
-        // CORREÇÃO FEITA AQUI: Pegando a data corretamente e formatando como Mês/Dia + Curso + Aluno
+        // Tratamento dos dados para as caixas
+        let alunoNome = item.aluno || "Sem Nome";
+        let curso = item.curso || "Sem curso";
+        let inicio = item.inicio ? item.inicio.substring(0,5) : "--:--";
+        let fim = item.fim ? item.fim.substring(0,5) : "--:--";
+
+        // MOLDURA PARA OS CAMPOS 1, 2, 3 e 4 (Aluno + Inicio e Fim + Curso)
+        let txtCaixaComum = `
+            <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
+                👤 <b>${alunoNome}</b> (${inicio} às ${fim})<br>
+                📘 ${curso}
+            </div>`;
+
+        if(seg === "integral") int.push(txtCaixaComum);
+        else if(seg === "extra") ext.push(txtCaixaComum);
+        else if(seg === "quadra") qua.push(txtCaixaComum);
+        else if(seg === "l/c" || seg === "lição de casa") lc.push(txtCaixaComum);
+        
+        // TRATAMENTO DA DATA PARA O CAMPO 5
         let dataFormatada = "Sem data";
         if (item.dia && item.dia.includes("-")) {
             let partes = item.dia.split("-");
-            // Pega o Mês (partes[1]) e o Dia (partes[2] cortando a hora se houver)
             dataFormatada = partes[1] + "/" + partes[2].substring(0, 2);
         } else if (item.dia) {
             dataFormatada = item.dia;
@@ -195,15 +212,34 @@ function renderizarCaixasSegmentos() {
             dataFormatada = item.diasSemana;
         }
         
-        diaC.push(`📅 ${dataFormatada} | 📘 ${item.curso || "S/C"} - 👤 ${item.aluno}`);
+        // MOLDURA PARA O CAMPO 5 (Aluno + Dia + Curso)
+        let txtCampo5 = `
+            <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
+                👤 <b>${alunoNome}</b> | 📅 ${dataFormatada}<br>
+                📘 ${curso}
+            </div>`;
+        
+        diaC.push(txtCampo5);
     });
     
-    document.getElementById("listaIntegral").innerHTML = int.join("<br>");
-    document.getElementById("listaExtra").innerHTML = ext.join("<br>");
-    document.getElementById("listaQuadra").innerHTML = qua.join("<br>");
-    document.getElementById("listaLC").innerHTML = lc.join("<br>");
-    document.getElementById("listaDia").innerHTML = diaC.join("<br>");
-    document.getElementById("resumo").innerHTML = `Total: ${alunosGlobal.length}<br>Integral: ${int.length}<br>Extra: ${ext.length}`;
+    // Inserindo dados nas caixas
+    document.getElementById("listaIntegral").innerHTML = int.join("");
+    document.getElementById("listaExtra").innerHTML = ext.join("");
+    document.getElementById("listaQuadra").innerHTML = qua.join("");
+    document.getElementById("listaLC").innerHTML = lc.join("");
+    document.getElementById("listaDia").innerHTML = diaC.join("");
+    
+    // MOLDURA PARA O CAMPO 6 (Resumo Geral de Seguimentos + Total de Erros no Pátio)
+    document.getElementById("resumo").innerHTML = `
+        <div style="line-height: 1.6; font-size: 15px;">
+            <strong>Total Geral de Alunos:</strong> ${alunosGlobal.length}<br><br>
+            <strong>Integral:</strong> ${int.length}<br>
+            <strong>Extra:</strong> ${ext.length}<br>
+            <strong>Quadra:</strong> ${qua.length}<br>
+            <strong>Lição de Casa:</strong> ${lc.length}<br><br>
+            <strong style="color: red;">🚨 Erros no Pátio: ${totalErros}</strong>
+        </div>
+    `;
 }
 
 function filtrar(tipo) {
@@ -244,7 +280,6 @@ function gerarListaParaChamada() {
     });
 }
 
-// MELHORIA 1: PDF COM COLUNAS NOME, PRESENÇA, SEGMENTO, CURSO E DATA
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const btn = document.getElementById("btnSalvar");
@@ -257,7 +292,6 @@ async function salvarRelatorioNoSheets() {
     const dataHoje = new Date().toLocaleDateString();
     let dadosParaEnviar = [];
 
-    // Coleta os dados de cada linha da chamada
     document.querySelectorAll(".sel-presenca").forEach(select => {
         const nome = select.getAttribute("data-aluno");
         const presenca = select.value;
@@ -287,7 +321,6 @@ async function salvarRelatorioNoSheets() {
         
         if (texto.includes("✅")) {
             alert(texto);
-            // Opcional: limpar a lista após salvar
             document.getElementById("listaChamadaAlunos").innerHTML = "";
             document.getElementById("escolherCurso").value = "";
         } else {
