@@ -2,28 +2,20 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel de Alunos com Calendário</title>
+<title>Painel de Alunos - Sincronizado Drive</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-/* SEU ESTILO ORIGINAL MANTIDO */
+/* SEU LAYOUT ORIGINAL */
 .topo-container { display: flex; justify-content: center; align-items: flex-start; gap: 30px; }
 .imagem-lateral img { width: 250px; border: 2px solid #333; border-radius: 10px; }
 .layoutPrincipal { display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-top: 20px; }
 .filtroLateral { width: 260px; }
 .conteudoDireita { flex: 1; max-width: 700px; }
 
-#patio {
-  margin: 20px auto; padding: 15px; max-width: 700px;
-  background: #ffe5e5; border: 3px dashed red; border-radius: 10px;
-}
+#patio { margin: 20px auto; padding: 15px; max-width: 700px; background: #ffe5e5; border: 3px dashed red; border-radius: 10px; }
 #alunosErro { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.alunoErro {
-  background: red; color: white; padding: 10px; border-radius: 8px;
-  font-weight: bold; cursor: pointer; animation: pular 0.8s infinite alternate;
-  text-align: left; min-width: 120px;
-}
-/* Melhoria visual para o erro aparecer debaixo do nome */
+.alunoErro { background: red; color: white; padding: 10px; border-radius: 8px; font-weight: bold; text-align: left; min-width: 120px; animation: pular 0.8s infinite alternate; }
 .alunoErro small { display: block; font-weight: normal; font-size: 10px; margin-top: 4px; line-height: 1.1; }
 
 @keyframes pular { from { transform: translateY(0px); } to { transform: translateY(-10px); } }
@@ -38,11 +30,7 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 .aluno.quadra { background: #fff3b0; }
 .aluno.lc { background: #e0aaff; }
 
-.area {
-  display: inline-block; width: 260px; height: 300px; margin: 10px;
-  border: 3px solid #333; border-radius: 10px; background: white;
-  position: relative; vertical-align: top;
-}
+.area { display: inline-block; width: 260px; height: 300px; margin: 10px; border: 3px solid #333; border-radius: 10px; background: white; vertical-align: top; }
 .area-chamada { height: 400px; } 
 
 .titulo { font-weight: bold; padding: 5px; background: #eee; }
@@ -52,10 +40,8 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 #calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 700px; margin: 20px auto; }
 .dia { border: 1px solid #ccc; min-height: 60px; padding: 5px; text-align: left; background: #fdfdfd; position: relative; }
 .dia h4 { margin: 0; font-size: 14px; }
-.aluno { color: #000; font-weight: bold; border-left: 4px solid #333; }
 
 .item-chamada { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 3px 0; }
-.sel-presenca { font-size: 12px; }
 .btn-pdf { background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 90%; margin-top: 10px; }
 </style>
 </head>
@@ -65,8 +51,7 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 <h1>Painel de Alunos</h1>
 
 <div style="margin:20px;">
-  <input type="text" id="buscaNome" placeholder="🔍 Buscar aluno..." 
-         style="padding:8px; width:200px; border-radius:8px; border:1px solid #ccc;">
+  <input type="text" id="buscaNome" placeholder="🔍 Buscar aluno..." style="padding:8px; width:200px; border-radius:8px; border:1px solid #ccc;">
   <br><br>
   <button onclick="filtrar('todos')">Todos</button>
   <button onclick="filtrar('integral')">Integral</button>
@@ -80,9 +65,7 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 <div class="layoutPrincipal">
   <div class="filtroLateral">
     <div class="area">
-      <div class="titulo" id="tituloFiltro">
-        Filtro: <span id="nomeFiltro">Todos</span> (<span id="qtdFiltro">0</span>)
-      </div>
+      <div class="titulo">Filtro: <span id="nomeFiltro">Todos</span> (<span id="qtdFiltro">0</span>)</div>
       <div class="lista" id="listaFiltro"></div>
     </div>
 
@@ -92,16 +75,14 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
           <option value="">Escolha o curso...</option>
       </select>
       <div class="lista" id="listaChamadaAlunos"></div>
-      <button class="btn-pdf" onclick="imprimirPDF()">Confirmar e Gerar PDF</button>
+      <button id="btnSalvar" class="btn-pdf" onclick="imprimirPDF()">Confirmar e Salvar no Drive ☁️</button>
     </div>
   </div>
 
   <div class="conteudoDireita">
     <div class="topo-container">
       <div id="calendario"></div>
-      <div class="imagem-lateral">
-        <img src="tabela.png" alt="Tabela de Segmentos">
-      </div>
+      <div class="imagem-lateral"><img src="tabela.png" alt="Tabela"></div>
     </div>
   </div>
 </div>
@@ -127,7 +108,7 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 </div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbzQseSpaq3ePxcVV5dZG19HAV4AXEP9Ah0bNZV2rjNqxoOEf42kTdmyUqrbjHpRjYxn/exec";
+const URL = "COLE_AQUI_A_URL_DO_SEU_SCRIPT_GOOGLE"; // Substitua pela sua URL
 let alunosGlobal = [];
 let filtroAtual = "todos";
 
@@ -146,18 +127,14 @@ async function atualizarPainel() {
     const resposta = await fetch(URL);
     alunosGlobal = await resposta.json();
     
-    // ATUALIZAÇÃO DO PÁTIO (Melhoria 2: Erros visíveis)
+    // Pátio com Erros Visíveis
     const patio = document.getElementById("alunosErro");
     patio.innerHTML = "";
     alunosGlobal.filter(a => verificarProblemas(a).length > 0).forEach(a => {
-      const erros = verificarProblemas(a);
-      const div = document.createElement("div");
-      div.className = "alunoErro";
-      div.innerHTML = `⚠️ ${a.aluno || "Sem Nome"} <small>${erros.join("<br>")}</small>`;
-      div.onclick = () => alert("Aluno: " + (a.aluno || "Sem Nome") + "\nDetalhes:\n" + erros.join("\n"));
-      patio.appendChild(div);
+      patio.innerHTML += `<div class="alunoErro">⚠️ ${a.aluno || "Sem Nome"} <small>${verificarProblemas(a).join("<br>")}</small></div>`;
     });
 
+    // Cursos
     const select = document.getElementById("escolherCurso");
     const valorAntigo = select.value;
     const cursos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c))];
@@ -189,27 +166,23 @@ function renderizarCaixasSegmentos() {
     document.getElementById("listaQuadra").innerHTML = qua.join("<br>");
     document.getElementById("listaLC").innerHTML = lc.join("<br>");
     document.getElementById("listaDia").innerHTML = diaC.join("<br>");
-    document.getElementById("resumo").innerHTML = `Total: ${alunosGlobal.length}<br>Integral: ${int.length}<br>Extra: ${ext.length}`;
+    document.getElementById("resumo").innerHTML = `Total: ${alunosGlobal.length}`;
 }
 
 function filtrar(tipo) {
   filtroAtual = tipo;
   const busca = document.getElementById("buscaNome").value.toLowerCase();
-  const listaFiltro = document.getElementById("listaFiltro");
-  listaFiltro.innerHTML = "";
-
   const filtrados = alunosGlobal.filter(a => {
     const bateTipo = (tipo === "todos") || ((a.segmento || "").toLowerCase() === tipo);
     const bateBusca = (a.aluno || "").toLowerCase().includes(busca);
     return bateTipo && bateBusca;
   });
-
-  filtrados.forEach(a => listaFiltro.innerHTML += `👤 ${a.aluno} (${a.curso || ''})<br>`);
+  const listaF = document.getElementById("listaFiltro");
+  listaF.innerHTML = "";
+  filtrados.forEach(a => listaF.innerHTML += `👤 ${a.aluno}<br>`);
   document.getElementById("nomeFiltro").innerText = tipo.toUpperCase();
   document.getElementById("qtdFiltro").innerText = filtrados.length;
-
-  const hoje = new Date();
-  gerarCalendario(hoje.getMonth(), hoje.getFullYear(), filtrados);
+  gerarCalendario(new Date().getMonth(), new Date().getFullYear(), filtrados);
 }
 
 function gerarListaParaChamada() {
@@ -217,68 +190,64 @@ function gerarListaParaChamada() {
     const container = document.getElementById("listaChamadaAlunos");
     container.innerHTML = "";
     if(!curso) return;
-
     alunosGlobal.filter(a => a.curso === curso).sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
-        container.innerHTML += `
-            <div class="item-chamada">
-                <span>${a.aluno}</span>
-                <select class="sel-presenca" data-aluno="${a.aluno}">
-                    <option value="(V)">✅ (V)</option>
-                    <option value="(X)">❌ (X)</option>
-                </select>
-            </div>`;
+        container.innerHTML += `<div class="item-chamada"><span>${a.aluno}</span><select class="sel-presenca" data-aluno="${a.aluno}"><option value="(V)">✅ (V)</option><option value="(X)">❌ (X)</option></select></div>`;
     });
 }
 
-// MELHORIA 1: PDF COM COLUNAS NOME, PRESENÇA, SEGMENTO, CURSO E DATA
-function imprimirPDF() {
+// FUNÇÃO MESTRE: GERA PDF, BAIXA E ENVIA PRO DRIVE
+async function imprimirPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const cursoSelecionado = document.getElementById("escolherCurso").value;
-    if(!cursoSelecionado) return alert("Selecione um curso!");
+    const curso = document.getElementById("escolherCurso").value;
+    const btn = document.getElementById("btnSalvar");
+    
+    if(!curso) return alert("Selecione um curso!");
+
+    btn.innerText = "⏳ Enviando ao Drive...";
+    btn.disabled = true;
 
     const dataHoje = new Date().toLocaleDateString();
+    const nomeArq = `Chamada_${curso}_${dataHoje.replace(/\//g,'-')}.pdf`;
 
-    // Título e Data
-    doc.setFont(undefined, 'bold');
-    doc.text("LISTA DE CHAMADA", 105, 15, { align: "center" });
-    doc.setFontSize(10);
-    doc.text(`Data: ${dataHoje}`, 10, 25);
-    doc.text(`Curso Base: ${cursoSelecionado}`, 10, 30);
-
-    // Cabeçalho da Tabela
-    let y = 40;
-    doc.setFillColor(230, 230, 230);
-    doc.rect(10, y-5, 190, 7, 'F');
-    doc.text("NOME DO ALUNO", 12, y);
-    doc.text("SEGMENTO", 80, y);
-    doc.text("CURSO", 120, y);
-    doc.text("PRESENÇA", 170, y);
+    // Desenha o PDF
+    doc.setFontSize(14); doc.text("LISTA DE CHAMADA - " + curso, 105, 15, {align:"center"});
+    doc.setFontSize(10); doc.text("Data: " + dataHoje, 10, 25);
     
+    let y = 35;
+    doc.text("NOME", 10, y); doc.text("SEGMENTO", 80, y); doc.text("PRESENÇA", 170, y);
+    doc.line(10, y+2, 200, y+2);
     y += 10;
-    doc.setFont(undefined, 'normal');
 
     document.querySelectorAll(".sel-presenca").forEach(s => {
-        const nomeAluno = s.getAttribute("data-aluno");
-        const presenca = s.value;
-        
-        // Busca os dados completos do aluno no array global
-        const dados = alunosGlobal.find(a => a.aluno === nomeAluno) || {};
-        
-        doc.text(nomeAluno.substring(0, 30), 12, y); // Limita tamanho do nome
+        const nome = s.getAttribute("data-aluno");
+        const dados = alunosGlobal.find(a => a.aluno === nome) || {};
+        doc.text(nome, 10, y);
         doc.text(String(dados.segmento || ""), 80, y);
-        doc.text(String(dados.curso || ""), 120, y);
-        doc.text(presenca, 175, y);
-
-        // Linha divisória fina
-        doc.setDrawColor(200);
-        doc.line(10, y+2, 200, y+2);
-        
+        doc.text(s.value, 175, y);
         y += 10;
         if(y > 280) { doc.addPage(); y = 20; }
     });
 
-    doc.save(`Chamada_${cursoSelecionado}_${dataHoje.replace(/\//g,'-')}.pdf`);
+    // 1. BAIXA NO COMPUTADOR
+    doc.save(nomeArq);
+
+    // 2. ENVIA PARA O DRIVE
+    const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+    try {
+        const resp = await fetch(URL, {
+            method: 'POST',
+            body: JSON.stringify({ pdf: pdfBase64, nomeArquivo: nomeArq })
+        });
+        const texto = await resp.text();
+        alert("✅ PDF baixado e salvo no seu Google Drive!");
+    } catch (e) {
+        alert("❌ Erro ao salvar no Drive, mas o PDF foi baixado.");
+    } finally {
+        btn.innerText = "Confirmar e Salvar no Drive ☁️";
+        btn.disabled = false;
+    }
 }
 
 function gerarCalendario(mes, ano, dados) {
@@ -289,15 +258,9 @@ function gerarCalendario(mes, ano, dados) {
     const div = document.createElement("div"); div.className="dia"; div.style.fontWeight="bold"; div.innerText=d;
     calendario.appendChild(div);
   });
-
   const primeiroDia = new Date(ano, mes, 1).getDay();
   const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-
-  for (let i = 0; i < primeiroDia; i++) {
-    const v = document.createElement("div"); v.className="dia"; v.style.background="#eee";
-    calendario.appendChild(v);
-  }
-
+  for (let i = 0; i < primeiroDia; i++) { calendario.appendChild(document.createElement("div")).className="dia"; }
   for (let dia = 1; dia <= ultimoDia; dia++) {
     const divDia = document.createElement("div"); divDia.className="dia";
     divDia.innerHTML = `<h4>${dia}</h4>`;
@@ -310,10 +273,8 @@ function gerarCalendario(mes, ano, dados) {
       }
       return false;
     });
-
     if (alunosDoDia.length > 0) {
-      const m = document.createElement("div"); m.innerText = "🎯 " + alunosDoDia.length;
-      m.style.fontSize="10px"; m.style.fontWeight="bold"; divDia.appendChild(m);
+      divDia.innerHTML += `<div style="font-size:10px; font-weight:bold;">🎯 ${alunosDoDia.length}</div>`;
       divDia.onclick = () => abrirModal(dia, mes, ano, alunosDoDia);
       divDia.style.cursor = "pointer";
     }
@@ -325,18 +286,14 @@ function abrirModal(dia, mes, ano, alunos) {
   document.getElementById("tituloDia").innerText = `Dia ${dia}/${mes+1}`;
   const lista = document.getElementById("listaModal");
   lista.innerHTML = "";
-  alunos.forEach(a => {
-    const div = document.createElement("div"); div.className="aluno " + (a.segmento||"").toLowerCase().replace("/","");
-    div.innerText = a.aluno + " (" + (a.curso||"") + ")";
-    lista.appendChild(div);
-  });
+  alunos.forEach(a => { lista.innerHTML += `<div><b>${a.aluno}</b> (${a.curso})</div>`; });
   document.getElementById("modal").style.display = "flex";
 }
 function fecharModal() { document.getElementById("modal").style.display = "none"; }
 
 document.getElementById("buscaNome").addEventListener("input", () => filtrar(filtroAtual));
 atualizarPainel();
-setInterval(atualizarPainel, 30000);
+setInterval(atualizarPainel, 60000);
 </script>
 
 </body>
