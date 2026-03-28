@@ -298,15 +298,16 @@ function gerarChamada() {
 async function confirmarChamada() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => ({
     nome: sel.dataset.nome,
+    segmento: document.getElementById("selecionaSegmento").value,
     status: sel.value
   }));
 
-  if (presencas.length === 0) {
+  if(presencas.length === 0){
     alert("Escolha um segmento primeiro!");
     return;
   }
 
-  // Gerar PDF
+  // 1️⃣ Gerar PDF para baixar
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.setFontSize(16);
@@ -322,35 +323,29 @@ async function confirmarChamada() {
     y += 10;
   });
 
-  // Converter PDF para Base64
+  // Baixar PDF
   const pdfBlob = doc.output('blob');
-  const base64 = await new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result.split(',')[1]); // só pega o Base64
-    reader.readAsDataURL(pdfBlob);
-  });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(pdfBlob);
+  link.download = "lista_chamada.pdf";
+  link.click();
 
+  // 2️⃣ Enviar dados para a API (sem PDF)
   try {
-    // Enviar PDF em JSON
     const res = await fetch(URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nomeArquivo: `lista_chamada_${segmento}.pdf`,
-        arquivoBase64: base64
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(presencas)
     });
-
-    if (res.ok) {
-      alert("Chamada registrada e PDF enviado para o Drive!");
+    const json = await res.json();
+    if(json.success){
+      alert("Chamada registrada com sucesso no Sheets!");
     } else {
-      const texto = await res.text();
-      console.error("Erro ao enviar PDF:", texto);
-      alert("Erro ao enviar PDF");
+      alert("Erro ao registrar chamada: " + json.message);
     }
-  } catch (e) {
-    console.error("Erro ao enviar PDF:", e);
-    alert("Erro ao enviar PDF");
+  } catch(e) {
+    console.error(e);
+    alert("Erro ao enviar dados para o Sheets");
   }
 }
 function verificarProblemas(aluno) {
