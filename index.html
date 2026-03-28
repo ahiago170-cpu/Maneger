@@ -358,7 +358,7 @@ async function salvarRelatorioNoSheets() {
         dados.push({ 
             nome: nomeAluno, 
             presenca: sel.value, 
-            curso: curso, 
+            curso: curso,
             data: new Date().toLocaleDateString('pt-BR'),
             // Se encontrar o aluno, envia os dados dele, senão envia vazio
             segmento: infoOriginal ? infoOriginal.segmento : "S/S", 
