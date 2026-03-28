@@ -157,7 +157,7 @@ body {
 
 <body>
 
-<select id="selecionaCurso" onchange="gerarChamada()">
+<select id="selecionaSegmento" onchange="gerarChamada()">
   <option value="">Escolha o curso</option>
 </select>
   
@@ -192,15 +192,11 @@ body {
     </div>
     
   <!-- lista de chamada telinha -->
-  </div>
-  <div class="area">
+<div class="area">
   <div class="titulo">Lista de Chamada</div>
   <select id="selecionaSegmento" onchange="gerarChamada()">
-    <option value="">Escolha o segmento</option>
-    <option value="integral">Integral</option>
-    <option value="extra">Extra</option>
-    <option value="quadra">Quadra</option>
-    <option value="l/c">L/C</option>
+    <option value="">Escolha o curso</option>
+    <!-- Cursos serão adicionados dinamicamente pelo JS -->
   </select>
   <div id="listaChamada" class="lista" style="margin-top:10px;"></div>
   <button onclick="confirmarChamada()">Confirmar Chamada ✅</button>
@@ -326,8 +322,8 @@ function gerarChamada() {
     listaDiv.appendChild(div);
   });
 }
-function atualizarCursos() {
-  const select = document.getElementById("selecionaCurso");
+function atualizarSegmentosChamada() {
+  const select = document.getElementById("selecionaSegmento");
   select.innerHTML = '<option value="">Escolha o curso</option>';
 
   const cursosUnicos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c && c.trim() !== ""))];
@@ -754,6 +750,7 @@ function gerarCalendario(mes, ano, dados) {
 
 // ATUALIZA AUTOMATICAMENTE
 atualizarPainel();
+atualizarSegmentosChamada();
 setInterval(atualizarPainel, 5000);
 document.getElementById("buscaNome").addEventListener("input", () => {
   filtrar(filtroAtual);
