@@ -321,14 +321,14 @@ window.confirmarChamada = function() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => {
     const aluno = alunosGlobal.find(a => a.aluno === sel.dataset.nome) || {};
     return {
-      nome: sel.dataset.nome,
-      presenca: sel.value,
-      segmento: document.getElementById("selecionaSegmento").value,
+      nome: aluno.aluno || sel.dataset.nome || "-",
+      presenca: sel.value || "-",
+      segmento: document.getElementById("selecionaSegmento").value || "-",
       dia: new Date().toISOString().split("T")[0],
-      inicio: aluno.inicio || "",
-      fim: aluno.fim || "",
+      inicio: aluno.inicio || "-",
+      fim: aluno.fim || "-",
       professor: "A definir",
-      curso: aluno.curso || ""
+      curso: aluno.curso || "-"
     };
   });
 
@@ -344,7 +344,6 @@ window.confirmarChamada = function() {
   const margin = 40;
   const usableWidth = pageWidth - margin * 2;
 
-  // Definir proporção das colunas
   const colWidths = {
     nome: 0.25 * usableWidth,
     presenca: 0.12 * usableWidth,
@@ -359,11 +358,10 @@ window.confirmarChamada = function() {
   doc.text("Lista de Chamada", margin, y);
   y += 20;
   doc.setFontSize(12);
-  doc.text("Segmento: " + presencas[0].segmento, margin, y);
-  doc.text("Data: " + presencas[0].dia, pageWidth - margin - 100, y);
+  doc.text("Segmento: " + String(presencas[0].segmento), margin, y);
+  doc.text("Data: " + String(presencas[0].dia), pageWidth - margin - 100, y);
   y += 30;
 
-  // Cabeçalho
   doc.setFont(undefined, "bold");
   let x = margin;
   doc.text("Nome", x, y); x += colWidths.nome;
@@ -371,18 +369,18 @@ window.confirmarChamada = function() {
   doc.text("Horário", x, y); x += colWidths.horario;
   doc.text("Curso", x, y); x += colWidths.curso;
   doc.text("Segmento", x, y); x += colWidths.segmento;
-  doc.text("Professor", x, y);
+  doc.text("Professor", x);
   doc.setFont(undefined, "normal");
   y += 20;
 
   presencas.forEach(p => {
     x = margin;
-    doc.text(p.nome, x, y); x += colWidths.nome;
+    doc.text(String(p.nome), x, y); x += colWidths.nome;
     doc.text(p.presenca === "v" ? "✅ Presente" : "❌ Faltou", x, y); x += colWidths.presenca;
-    doc.text(`${p.inicio || "-"} - ${p.fim || "-"}`, x, y); x += colWidths.horario;
-    doc.text(p.curso || "-", x, y); x += colWidths.curso;
-    doc.text(p.segmento || "-", x, y); x += colWidths.segmento;
-    doc.text(p.professor, x);
+    doc.text(`${String(p.inicio)} - ${String(p.fim)}`, x, y); x += colWidths.horario;
+    doc.text(String(p.curso), x, y); x += colWidths.curso;
+    doc.text(String(p.segmento), x, y); x += colWidths.segmento;
+    doc.text(String(p.professor), x);
     y += 20;
 
     if (y > 750) {
@@ -392,8 +390,7 @@ window.confirmarChamada = function() {
   });
 
   doc.save("lista_chamada.pdf");
-  alert("PDF da chamada gerado corretamente na folha A4!");
-}
+  alert("PDF da chamada Gerado-entregue a coordenação ⚠️");
 // LIMPAR HORA
 
   
