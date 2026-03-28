@@ -214,12 +214,14 @@ async function salvarRelatorioNoSheets() {
         const presenca = select.value;
         const infoAluno = alunosGlobal.find(a => a.aluno === nome) || {};
 
-        dadosParaEnviar.push({
-            nome: nome,
-            segmento: infoAluno.segmento || "",
-            presenca: presenca,
-            data: dataHoje
-        });
+     // Dentro da sua função salvarRelatorioNoSheets no HTML, mude o objeto:
+    dadosParaEnviar.push({
+       nome: sel.getAttribute("data-aluno"),
+       segmento: sel.getAttribute("data-segmento"),
+       presenca: sel.value,
+       data: dataHoje,
+       curso: curso // Adicione esta linha aqui
+  });
     });
 
     if (dadosParaEnviar.length === 0) {
