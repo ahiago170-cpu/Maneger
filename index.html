@@ -307,7 +307,7 @@ async function confirmarChamada() {
     return;
   }
 
-  // 1️⃣ Gerar PDF para baixar
+  // 1️⃣ Gerar PDF
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.setFontSize(16);
@@ -323,14 +323,11 @@ async function confirmarChamada() {
     y += 10;
   });
 
-  // Baixar PDF
-  const pdfBlob = doc.output('blob');
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(pdfBlob);
-  link.download = "lista_chamada.pdf";
-  link.click();
+  // 2️⃣ Baixar PDF no navegador
+  // Aqui usamos o método interno do jsPDF que é mais seguro
+  doc.save("lista_chamada.pdf"); // <-- corrige o erro de URL.createObjectURL
 
-  // 2️⃣ Enviar dados para a API (sem PDF)
+  // 3️⃣ Enviar dados para a API (sem PDF)
   try {
     const res = await fetch(URL, {
       method: "POST",
