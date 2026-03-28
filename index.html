@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Painel de Alunos com Calendário</title>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 .topo-container {
   display: flex;
@@ -186,8 +186,22 @@ body {
 </div>
       <div class="lista" id="listaFiltro"></div>
     </div>
+    
+  <!-- lista de chamada telinha -->
   </div>
-
+  <div class="area">
+  <div class="titulo">Lista de Chamada</div>
+  <select id="selecionaSegmento" onchange="gerarChamada()">
+    <option value="">Escolha o segmento</option>
+    <option value="integral">Integral</option>
+    <option value="extra">Extra</option>
+    <option value="quadra">Quadra</option>
+    <option value="l/c">L/C</option>
+  </select>
+  <div id="listaChamada" class="lista" style="margin-top:10px;"></div>
+  <button onclick="confirmarChamada()">Confirmar Chamada ✅</button>
+</div>
+  
   <!-- CONTEÚDO DIREITA -->
   <div class="conteudoDireita">
    <div class="topo-container">
@@ -257,7 +271,75 @@ function limpar(valor){
   if(valor === null || valor === undefined) return "";
   return String(valor).trim();
 }
+// gerador de lista de chamada
+function gerarChamada() {
+  const segmento = document.getElementById("selecionaSegmento").value;
+  const listaDiv = document.getElementById("listaChamada");
+  listaDiv.innerHTML = "";
 
+  if(!segmento) return;
+
+  const alunosDoSegmento = alunosGlobal.filter(a => (a.segmento || "").toLowerCase() === segmento);
+
+  alunosDoSegmento.forEach(a => {
+    const div = document.createElement("div");
+    div.style.marginBottom = "5px";
+
+    div.innerHTML = `
+      <span>${a.aluno} (${a.curso || "-"})</span>
+      <select class="presenca" data-nome="${a.aluno}">
+        <option value="v">✅ Presente</option>
+        <option value="x">❌ Faltou</option>
+      </select>
+    `;
+    listaDiv.appendChild(div);
+  });
+}
+async function confirmarChamada() {
+  const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => ({
+    nome: sel.dataset.nome,
+    status: sel.value
+  }));
+
+  if(presencas.length === 0){
+    alert("Escolha um segmento primeiro!");
+    return;
+  }
+
+  // Gerar PDF
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text("Lista de Chamada", 20, 20);
+
+  const segmento = document.getElementById("selecionaSegmento").value;
+  doc.setFontSize(12);
+  doc.text("Segmento: " + segmento, 20, 30);
+
+  let y = 40;
+  presencas.forEach(p => {
+    doc.text(`${p.nome} - ${p.status === "v" ? "✅ Presente" : "❌ Faltou"}`, 20, y);
+    y += 10;
+  });
+
+  // Salvar PDF no Drive via API do Google Apps Script
+  const pdfBlob = doc.output('blob');
+
+  const formData = new FormData();
+  formData.append("arquivo", pdfBlob, "lista_chamada.pdf");
+
+  try {
+    const res = await fetch(URL, { method: "POST", body: formData });
+    if(res.ok){
+      alert("Chamada registrada e PDF enviado para o Drive!");
+    } else {
+      alert("Erro ao enviar PDF");
+    }
+  } catch(e){
+    console.error(e);
+    alert("Erro ao enviar PDF");
+  }
+}
 function verificarProblemas(aluno) {
   let erros = [];
 
