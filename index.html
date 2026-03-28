@@ -182,8 +182,22 @@ function renderizarCaixasSegmentos() {
         else if(seg === "extra") ext.push(txt);
         else if(seg === "quadra") qua.push(txt);
         else if(seg === "l/c") lc.push(txt);
-        diaC.push(item.aluno + " - " + (item.dia || "Sem data"));
+        
+        // CORREÇÃO FEITA AQUI: Pegando a data corretamente e formatando como Mês/Dia + Curso + Aluno
+        let dataFormatada = "Sem data";
+        if (item.dia && item.dia.includes("-")) {
+            let partes = item.dia.split("-");
+            // Pega o Mês (partes[1]) e o Dia (partes[2] cortando a hora se houver)
+            dataFormatada = partes[1] + "/" + partes[2].substring(0, 2);
+        } else if (item.dia) {
+            dataFormatada = item.dia;
+        } else if (item.diasSemana) {
+            dataFormatada = item.diasSemana;
+        }
+        
+        diaC.push(`📅 ${dataFormatada} | 📘 ${item.curso || "S/C"} - 👤 ${item.aluno}`);
     });
+    
     document.getElementById("listaIntegral").innerHTML = int.join("<br>");
     document.getElementById("listaExtra").innerHTML = ext.join("<br>");
     document.getElementById("listaQuadra").innerHTML = qua.join("<br>");
