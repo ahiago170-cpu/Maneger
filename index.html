@@ -317,7 +317,8 @@ function gerarChamada() {
     listaDiv.appendChild(div);
   });
 }
-window.confirmarChamada = async function() {
+// Função de chamada apenas local
+window.confirmarChamada = function() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => ({
     nome: sel.dataset.nome,
     segmento: document.getElementById("selecionaSegmento").value,
@@ -330,7 +331,7 @@ window.confirmarChamada = async function() {
     return;
   }
 
-  // 1️⃣ Gera PDF local
+  // Gera PDF local
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.setFontSize(16);
@@ -345,21 +346,7 @@ window.confirmarChamada = async function() {
   });
 
   doc.save("lista_chamada.pdf"); // PDF só local
-
-  // 2️⃣ Envia para Google Sheets
-  try {
-    const res = await fetch(URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(presencas)
-    });
-    const data = await res.json();
-    if(data.status === "ok") alert("Chamada registrada no Sheets!");
-    else alert("Erro no Sheets: " + data.message);
-  } catch(e) {
-    console.error(e);
-    alert("Erro ao enviar para o Sheets: " + e.message);
-  }
+  alert("PDF da chamada gerado localmente!");
 };
 // LIMPAR HORA
 
