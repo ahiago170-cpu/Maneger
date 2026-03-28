@@ -320,19 +320,20 @@ function gerarChamada() {
 window.confirmarChamada = function() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => {
     const aluno = alunosGlobal.find(a => a.aluno === sel.dataset.nome) || {};
+
     return {
-      nome: aluno.aluno || sel.dataset.nome || "-",
-      presenca: sel.value || "-",
-      segmento: document.getElementById("selecionaSegmento").value || "-",
-      dia: new Date().toISOString().split("T")[0],
-      inicio: aluno.inicio || "-",
-      fim: aluno.fim || "-",
-      professor: "A definir",
-      curso: aluno.curso || "-"
+      nome: String(aluno.aluno || sel.dataset.nome || "-"),
+      presenca: sel.value === "v" ? "✅ Presente" : "❌ Faltou",
+      segmento: String(aluno.segmento || "-"),
+      dia: String(aluno.dia || new Date().toISOString().split("T")[0]),
+      inicio: String(aluno.inicio || "-"),
+      fim: String(aluno.fim || "-"),
+      professor: String(aluno.professor || "-"),
+      curso: String(aluno.curso || "-")
     };
   });
 
-  if(presencas.length === 0){
+  if (presencas.length === 0) {
     alert("Escolha um segmento primeiro!");
     return;
   }
@@ -344,53 +345,61 @@ window.confirmarChamada = function() {
   const margin = 40;
   const usableWidth = pageWidth - margin * 2;
 
+  // largura das colunas proporcional
   const colWidths = {
     nome: 0.25 * usableWidth,
     presenca: 0.12 * usableWidth,
-    horario: 0.12 * usableWidth,
+    horario: 0.15 * usableWidth,
     curso: 0.15 * usableWidth,
     segmento: 0.12 * usableWidth,
-    professor: 0.24 * usableWidth
+    professor: 0.21 * usableWidth
   };
 
   let y = 40;
   doc.setFontSize(16);
-  doc.text("Lista de Chamada", margin, y);
-  y += 20;
+  doc.text("Lista de Chamada", pageWidth / 2, y, { align: "center" });
+  y += 25;
   doc.setFontSize(12);
-  doc.text("Segmento: " + String(presencas[0].segmento), margin, y);
-  doc.text("Data: " + String(presencas[0].dia), pageWidth - margin - 100, y);
+  doc.text(`Segmento: ${presencas[0].segmento}`, margin, y);
+  doc.text(`Data: ${presencas[0].dia}`, pageWidth - margin, y, { align: "right" });
   y += 30;
 
+  // Cabeçalho da tabela
   doc.setFont(undefined, "bold");
   let x = margin;
-  doc.text("Nome", x, y); x += colWidths.nome;
-  doc.text("Presença", x, y); x += colWidths.presenca;
-  doc.text("Horário", x, y); x += colWidths.horario;
-  doc.text("Curso", x, y); x += colWidths.curso;
-  doc.text("Segmento", x, y); x += colWidths.segmento;
-  doc.text("Professor", x);
+  ["Nome", "Presença", "Horário", "Curso", "Segmento", "Professor"].forEach((text, i) => {
+    doc.text(text, x, y);
+    x += Object.values(colWidths)[i];
+  });
   doc.setFont(undefined, "normal");
   y += 20;
 
+  // Linhas da tabela
   presencas.forEach(p => {
     x = margin;
-    doc.text(String(p.nome), x, y); x += colWidths.nome;
-    doc.text(p.presenca === "v" ? "✅ Presente" : "❌ Faltou", x, y); x += colWidths.presenca;
-    doc.text(`${String(p.inicio)} - ${String(p.fim)}`, x, y); x += colWidths.horario;
-    doc.text(String(p.curso), x, y); x += colWidths.curso;
-    doc.text(String(p.segmento), x, y); x += colWidths.segmento;
-    doc.text(String(p.professor), x);
+    [
+      p.nome,
+      p.presenca,
+      `${p.inicio} - ${p.fim}`,
+      p.curso,
+      p.segmento,
+      p.professor
+    ].forEach((valor, i) => {
+      doc.text(String(valor || "-"), x, y);
+      x += Object.values(colWidths)[i];
+    });
+
     y += 20;
 
-    if (y > 750) {
+    // quebra de página se passar do limite
+    if (y > 750) { 
       doc.addPage();
       y = 40;
     }
   });
 
   doc.save("lista_chamada.pdf");
-  alert("PDF da chamada Gerado-entregue a coordenação ⚠️");
+  alert("PDF gerado-Envie a coordenação ⚠️");
 };
 // LIMPAR HORA
 
