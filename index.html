@@ -281,11 +281,6 @@ function verificarProblemas(aluno) {
   if (!aluno.curso || aluno.curso.trim() === "") {
     erros.push("Curso não definido");
   }
-
-  
-  if (!aluno.inicio|| aluno.curso.trim() === "") {
-    erros.push("inicio não definido");
-  }
   // Pode adicionar mais regras, por exemplo:
    if (!aluno.dia) erros.push("Data não definida");
    if (!aluno.inicio || !aluno.fim) erros.push("Horário incompleto");
@@ -323,12 +318,19 @@ function gerarChamada() {
 }
 // Função de chamada apenas local
 window.confirmarChamada = function() {
-  const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => ({
-    nome: sel.dataset.nome,
-    segmento: document.getElementById("selecionaSegmento").value,
-    presenca: sel.value,
-    dia: new Date().toISOString().split("T")[0]
-  }));
+  const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => {
+    const aluno = alunosGlobal.find(a => a.aluno === sel.dataset.nome) || {};
+    return {
+      nome: sel.dataset.nome,
+      presenca: sel.value,
+      segmento: document.getElementById("selecionaSegmento").value,
+      dia: new Date().toISOString().split("T")[0],
+      inicio: aluno.inicio || "",
+      fim: aluno.fim || "",
+      professor: "A definir", // você pode atualizar depois
+      curso: aluno.curso || ""
+    };
+  });
 
   if(presencas.length === 0){
     alert("Escolha um segmento primeiro!");
@@ -337,20 +339,44 @@ window.confirmarChamada = function() {
 
   // Gera PDF local
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
   doc.setFontSize(16);
-  doc.text("Lista de Chamada", 20, 20);
+  doc.text("Lista de Chamada", 40, 40);
   doc.setFontSize(12);
-  doc.text("Segmento: " + presencas[0].segmento, 20, 30);
+  doc.text("Segmento: " + presencas[0].segmento, 40, 60);
+  doc.text("Data: " + presencas[0].dia, 300, 60);
 
-  let y = 40;
+  let y = 90;
+
+  // Cabeçalho da tabela
+  doc.setFont(undefined, "bold");
+  doc.text("Nome", 40, y);
+  doc.text("Presença", 180, y);
+  doc.text("Horário", 280, y);
+  doc.text("Curso", 380, y);
+  doc.text("Segmento", 480, y);
+  doc.text("Professor", 580, y);
+  doc.setFont(undefined, "normal");
+  y += 20;
+
   presencas.forEach(p => {
-    doc.text(`${p.nome} - ${p.presenca === "v" ? "✅ Presente" : "❌ Faltou"}`, 20, y);
-    y += 10;
+    doc.text(p.nome, 40, y);
+    doc.text(p.presenca === "v" ? "✅ Presente" : "❌ Faltou", 180, y);
+    doc.text(`${p.inicio || "-"} - ${p.fim || "-"}`, 280, y);
+    doc.text(p.curso || "-", 380, y);
+    doc.text(p.segmento || "-", 480, y);
+    doc.text(p.professor, 580, y);
+    y += 20;
+
+    // Se passar da página, cria nova
+    if (y > 750) {
+      doc.addPage();
+      y = 40;
+    }
   });
 
-  doc.save("lista_chamada.pdf"); // PDF só local
-  alert("PDF da chamada gerado localmente!");
+  doc.save("lista_chamada.pdf");
+  alert("PDF da chamada gerado localmente com mais informações!");
 };
 // LIMPAR HORA
 
