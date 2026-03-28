@@ -21,7 +21,11 @@
 .alunoErro {
   background: red; color: white; padding: 10px; border-radius: 8px;
   font-weight: bold; cursor: pointer; animation: pular 0.8s infinite alternate;
+  text-align: left; min-width: 120px;
 }
+/* Melhoria visual para o erro aparecer debaixo do nome */
+.alunoErro small { display: block; font-weight: normal; font-size: 10px; margin-top: 4px; line-height: 1.1; }
+
 @keyframes pular { from { transform: translateY(0px); } to { transform: translateY(-10px); } }
 
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
@@ -39,19 +43,17 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
   border: 3px solid #333; border-radius: 10px; background: white;
   position: relative; vertical-align: top;
 }
-/* AUMENTO DA CAIXA DE CHAMADA */
 .area-chamada { height: 400px; } 
 
 .titulo { font-weight: bold; padding: 5px; background: #eee; }
 .lista { height: 240px; overflow-y: auto; text-align: left; padding: 5px; font-size: 14px; }
-#listaChamadaAlunos { height: 250px; } /* Ajuste interno da lista de chamada */
+#listaChamadaAlunos { height: 250px; }
 
 #calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 700px; margin: 20px auto; }
 .dia { border: 1px solid #ccc; min-height: 60px; padding: 5px; text-align: left; background: #fdfdfd; position: relative; }
 .dia h4 { margin: 0; font-size: 14px; }
 .aluno { color: #000; font-weight: bold; border-left: 4px solid #333; }
 
-/* ESTILO DA CHAMADA */
 .item-chamada { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 3px 0; }
 .sel-presenca { font-size: 12px; }
 .btn-pdf { background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 90%; margin-top: 10px; }
@@ -129,7 +131,6 @@ const URL = "https://script.google.com/macros/s/AKfycbzQseSpaq3ePxcVV5dZG19HAV4A
 let alunosGlobal = [];
 let filtroAtual = "todos";
 
-// VERIFICAR ERROS (Dedo-duro)
 function verificarProblemas(aluno) {
   let erros = [];
   if (!aluno.aluno) erros.push("❌ Nome");
@@ -145,27 +146,26 @@ async function atualizarPainel() {
     const resposta = await fetch(URL);
     alunosGlobal = await resposta.json();
     
-    // Atualizar Pátio
+    // ATUALIZAÇÃO DO PÁTIO (Melhoria 2: Erros visíveis)
     const patio = document.getElementById("alunosErro");
     patio.innerHTML = "";
     alunosGlobal.filter(a => verificarProblemas(a).length > 0).forEach(a => {
+      const erros = verificarProblemas(a);
       const div = document.createElement("div");
       div.className = "alunoErro";
-      div.innerText = "⚠️ " + (a.aluno || "Sem Nome");
-      div.onclick = () => alert("Aluno: " + (a.aluno || "Sem Nome") + "\nErros:\n" + verificarProblemas(a).join("\n"));
+      div.innerHTML = `⚠️ ${a.aluno || "Sem Nome"} <small>${erros.join("<br>")}</small>`;
+      div.onclick = () => alert("Aluno: " + (a.aluno || "Sem Nome") + "\nDetalhes:\n" + erros.join("\n"));
       patio.appendChild(div);
     });
 
-    // Atualizar Select de Cursos
     const select = document.getElementById("escolherCurso");
+    const valorAntigo = select.value;
     const cursos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c))];
     select.innerHTML = '<option value="">Escolha o curso...</option>';
     cursos.sort().forEach(c => select.innerHTML += `<option value="${c}">${c}</option>`);
+    select.value = valorAntigo;
 
-    // Resumos das caixas coloridas lá embaixo
     renderizarCaixasSegmentos();
-    
-    // Sincronizar Filtro e Calendário
     filtrar(filtroAtual);
 
     const agora = new Date();
@@ -212,7 +212,6 @@ function filtrar(tipo) {
   gerarCalendario(hoje.getMonth(), hoje.getFullYear(), filtrados);
 }
 
-// LÓGICA DA CHAMADA
 function gerarListaParaChamada() {
     const curso = document.getElementById("escolherCurso").value;
     const container = document.getElementById("listaChamadaAlunos");
@@ -231,22 +230,57 @@ function gerarListaParaChamada() {
     });
 }
 
+// MELHORIA 1: PDF COM COLUNAS NOME, PRESENÇA, SEGMENTO, CURSO E DATA
 function imprimirPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const curso = document.getElementById("escolherCurso").value;
-    if(!curso) return alert("Selecione um curso!");
+    const cursoSelecionado = document.getElementById("escolherCurso").value;
+    if(!cursoSelecionado) return alert("Selecione um curso!");
 
-    doc.text(`Chamada: ${curso} - Data: ${new Date().toLocaleDateString()}`, 10, 10);
-    let y = 20;
+    const dataHoje = new Date().toLocaleDateString();
+
+    // Título e Data
+    doc.setFont(undefined, 'bold');
+    doc.text("LISTA DE CHAMADA", 105, 15, { align: "center" });
+    doc.setFontSize(10);
+    doc.text(`Data: ${dataHoje}`, 10, 25);
+    doc.text(`Curso Base: ${cursoSelecionado}`, 10, 30);
+
+    // Cabeçalho da Tabela
+    let y = 40;
+    doc.setFillColor(230, 230, 230);
+    doc.rect(10, y-5, 190, 7, 'F');
+    doc.text("NOME DO ALUNO", 12, y);
+    doc.text("SEGMENTO", 80, y);
+    doc.text("CURSO", 120, y);
+    doc.text("PRESENÇA", 170, y);
+    
+    y += 10;
+    doc.setFont(undefined, 'normal');
+
     document.querySelectorAll(".sel-presenca").forEach(s => {
-        doc.text(`${s.getAttribute("data-aluno")} ............ ${s.value}`, 10, y);
+        const nomeAluno = s.getAttribute("data-aluno");
+        const presenca = s.value;
+        
+        // Busca os dados completos do aluno no array global
+        const dados = alunosGlobal.find(a => a.aluno === nomeAluno) || {};
+        
+        doc.text(nomeAluno.substring(0, 30), 12, y); // Limita tamanho do nome
+        doc.text(String(dados.segmento || ""), 80, y);
+        doc.text(String(dados.curso || ""), 120, y);
+        doc.text(presenca, 175, y);
+
+        // Linha divisória fina
+        doc.setDrawColor(200);
+        doc.line(10, y+2, 200, y+2);
+        
         y += 10;
+        if(y > 280) { doc.addPage(); y = 20; }
     });
-    doc.save(`Chamada_${curso}.pdf`);
+
+    doc.save(`Chamada_${cursoSelecionado}_${dataHoje.replace(/\//g,'-')}.pdf`);
 }
 
-// CALENDÁRIO (Sincronizado)
 function gerarCalendario(mes, ano, dados) {
   const calendario = document.getElementById("calendario");
   calendario.innerHTML = "";
