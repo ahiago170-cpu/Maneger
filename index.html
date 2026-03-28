@@ -317,12 +317,12 @@ function gerarChamada() {
     listaDiv.appendChild(div);
   });
 }
-async function confirmarChamada() {
+window.confirmarChamada = async function() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => ({
     nome: sel.dataset.nome,
     segmento: document.getElementById("selecionaSegmento").value,
     presenca: sel.value,
-    dia: new Date().toISOString().split("T")[0] // só YYYY-MM-DD
+    dia: new Date().toISOString().split("T")[0]
   }));
 
   if(presencas.length === 0){
@@ -330,23 +330,37 @@ async function confirmarChamada() {
     return;
   }
 
+  // 1️⃣ Gera PDF local
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text("Lista de Chamada", 20, 20);
+  doc.setFontSize(12);
+  doc.text("Segmento: " + presencas[0].segmento, 20, 30);
+
+  let y = 40;
+  presencas.forEach(p => {
+    doc.text(`${p.nome} - ${p.presenca === "v" ? "✅ Presente" : "❌ Faltou"}`, 20, y);
+    y += 10;
+  });
+
+  doc.save("lista_chamada.pdf"); // PDF só local
+
+  // 2️⃣ Envia para Google Sheets
   try {
-    const res = await fetch("https://script.google.com/macros/s/AKfycbwmgCkO7h4aPbtV0YKLOBDUdb8m5nHJIOIyVWLmRjH64c7jC7BzAv1BWl6zX5qLgOci/exec", {
+    const res = await fetch(URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(presencas)
     });
-
     const data = await res.json();
-
-    if(data.status === "ok") alert("Presenças enviadas com sucesso!");
-    else alert("Erro: " + data.message);
-
+    if(data.status === "ok") alert("Chamada registrada no Sheets!");
+    else alert("Erro no Sheets: " + data.message);
   } catch(e) {
     console.error(e);
-    alert("Erro ao enviar os dados: " + e.message);
+    alert("Erro ao enviar para o Sheets: " + e.message);
   }
-}
+};
 // LIMPAR HORA
 
   
