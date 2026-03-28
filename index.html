@@ -199,55 +199,39 @@ function gerarListaParaChamada() {
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const btn = document.getElementById("btnSalvar");
-    
-    if(!curso) return alert("Selecione um curso para fazer a chamada!");
+    const listaDeInputs = document.querySelectorAll(".sel-presenca");
 
-    btn.innerText = "⏳ Gravando na Planilha...";
+    if (!curso || listaDeInputs.length === 0) return alert("Selecione um curso com alunos!");
+
+    btn.innerText = "⏳ Salvando e Gerando PDF...";
     btn.disabled = true;
 
-    const dataHoje = new Date().toLocaleDateString();
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
     let dadosParaEnviar = [];
 
-    // Coleta os dados de cada linha da chamada
-    document.querySelectorAll(".sel-presenca").forEach(select => {
-        const nome = select.getAttribute("data-aluno");
-        const presenca = select.value;
-        const infoAluno = alunosGlobal.find(a => a.aluno === nome) || {};
-
-     // Dentro da sua função salvarRelatorioNoSheets no HTML, mude o objeto:
-    dadosParaEnviar.push({
-       nome: sel.getAttribute("data-aluno"),
-       segmento: sel.getAttribute("data-segmento"),
-       presenca: sel.value,
-       data: dataHoje,
-       curso: curso // Adicione esta linha aqui
-  });
+    // O ERRO ESTAVA AQUI: O nome dentro do parênteses tem que ser igual ao de baixo
+    listaDeInputs.forEach(item => { 
+        dadosParaEnviar.push({
+            nome: item.getAttribute("data-aluno"),
+            segmento: item.getAttribute("data-segmento"),
+            presenca: item.value,
+            data: dataHoje,
+            curso: curso // Enviando o curso para o Script dar nome ao PDF
+        });
     });
-
-    if (dadosParaEnviar.length === 0) {
-        alert("Não há alunos na lista para salvar.");
-        btn.disabled = false;
-        return;
-    }
 
     try {
         const response = await fetch(URL, {
             method: 'POST',
             body: JSON.stringify({ alunos: dadosParaEnviar })
         });
-
-        const texto = await response.text();
+        const resultado = await response.text();
+        alert(resultado); 
         
-        if (texto.includes("✅")) {
-            alert(texto);
-            // Opcional: limpar a lista após salvar
-            document.getElementById("listaChamadaAlunos").innerHTML = "";
-            document.getElementById("escolherCurso").value = "";
-        } else {
-            alert("Erro ao salvar: " + texto);
-        }
+        document.getElementById("listaChamadaAlunos").innerHTML = "";
+        document.getElementById("escolherCurso").value = "";
     } catch (e) {
-        alert("Erro de conexão com o Google Sheets.");
+        alert("Erro de conexão. Verifique se a URL do Script está correta.");
         console.error(e);
     } finally {
         btn.innerText = "Confirmar e Salvar no Sheets 📊";
