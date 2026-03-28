@@ -157,6 +157,10 @@ body {
 
 <body>
 
+<select id="selecionaCurso" onchange="gerarChamada()">
+  <option value="">Escolha o curso</option>
+</select>
+  
 <h1>Painel de Alunos</h1>
 
 <div style="margin:20px;">
@@ -287,6 +291,8 @@ function verificarProblemas(aluno) {
 
   return erros;
 }
+
+
 //oque  tem de errado com o aluno
 function limpar(valor){
   if(valor === null || valor === undefined) return "";
@@ -295,13 +301,13 @@ function limpar(valor){
 // gerador de lista de chamada
 // Novo gerarChamada() filtrando por curso
 function gerarChamada() {
-  const cursoSelecionado = document.getElementById("selecionaSegmento").value; // aqui usa o mesmo select, mas agora vai ser o curso
+  const cursoSelecionado = document.getElementById("selecionaCurso").value;
   const listaDiv = document.getElementById("listaChamada");
   listaDiv.innerHTML = "";
 
   if (!cursoSelecionado) return;
 
-  // Filtra alunos pelo curso, ignorando maiúsculas/minúsculas
+  // filtra alunos pelo curso
   const alunosDoCurso = alunosGlobal.filter(a => 
     (a.curso || "").toLowerCase() === cursoSelecionado.toLowerCase()
   );
@@ -312,7 +318,7 @@ function gerarChamada() {
 
     div.innerHTML = `
       <span>${a.aluno}</span>
-      <select class="presenca" data-nome="${a.aluno}" data-curso="${a.curso}">
+      <select class="presenca" data-nome="${a.aluno}">
         <option value="v">✅ Presente</option>
         <option value="x">❌ Faltou</option>
       </select>
@@ -320,6 +326,22 @@ function gerarChamada() {
     listaDiv.appendChild(div);
   });
 }
+function atualizarCursos() {
+  const select = document.getElementById("selecionaCurso");
+  select.innerHTML = '<option value="">Escolha o curso</option>';
+
+  const cursosUnicos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c && c.trim() !== ""))];
+
+  cursosUnicos.forEach(curso => {
+    const option = document.createElement("option");
+    option.value = curso;
+    option.innerText = curso;
+    select.appendChild(option);
+  });
+}
+
+// Chame depois que a API carregar os alunos
+atualizarCursos();
 // Função de chamada apenas local
 window.confirmarChamada = function() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => {
@@ -351,10 +373,10 @@ window.confirmarChamada = function() {
 
   // largura das colunas proporcional
   const colWidths = {
-    nome: 0.25 * usableWidth,
+    nome: 0.15 * usableWidth,
     presenca: 0.8 * usableWidth,
-    horario: 0.25* usableWidth,
-    curso: 0.20 * usableWidth,
+    horario: 0.8* usableWidth,
+    curso: 0.15 * usableWidth,
     segmento: 0.15 * usableWidth
     // professor não entra na linha, vai no topo
   };
