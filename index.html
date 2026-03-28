@@ -247,6 +247,7 @@ function gerarCalendario(mes, ano, dados) {
   calendario.innerHTML = "";
   const diasSemanaNomes = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
   
+  // Cabeçalho do calendário
   diasSemanaNomes.forEach(d => {
     const div = document.createElement("div"); 
     div.className="dia-cell"; div.style.fontWeight="bold"; div.style.minHeight="20px"; div.innerText=d;
@@ -256,40 +257,52 @@ function gerarCalendario(mes, ano, dados) {
   const primeiroDia = new Date(ano, mes, 1).getDay();
   const ultimoDia = new Date(ano, mes + 1, 0).getDate();
 
+  // Espaços vazios antes do dia 1
   for (let i = 0; i < primeiroDia; i++) {
     const v = document.createElement("div"); v.className="dia-cell"; v.style.background="#f0f0f0";
     calendario.appendChild(v);
   }
 
+  // Preenchimento dos dias
   for (let dia = 1; dia <= ultimoDia; dia++) {
     const divDia = document.createElement("div"); 
     divDia.className = "dia-cell";
     divDia.innerHTML = `<h4>${dia}</h4>`;
     
-    // --- LÓGICA DE FILTRO DO CALENDÁRIO ---
+    // --- LÓGICA PERFEITA DE FILTRAGEM ---
     const alunosDoDia = dados.filter(a => {
-      // 1. Prioridade: Se houver uma data fixa (dia)
-      if (a.dia && a.dia.includes("-")) {
+      
+      // 1. CHECAGEM DE DATA FIXA (Ex: 12-03-2026)
+      if (a.dia && String(a.dia).trim() !== "") {
           let partes = a.dia.split("-");
           let d, m, y;
-          // Verifica se é YYYY-MM-DD ou DD-MM-YYYY
+          
+          // Suporta tanto 2026-03-12 quanto 12-03-2026
           if (partes[0].length === 4) { [y, m, d] = partes; } 
           else { [d, m, y] = partes; }
 
-          // Compara exatamente Ano, Mês (JS é 0-11) e Dia
-          return parseInt(y) === ano && (parseInt(m) - 1) === mes && parseInt(d) === dia;
+          // Só retorna TRUE se o dia, o mês e o ano forem IDÊNTICOS ao que o calendário está gerando
+          return parseInt(d) === dia && (parseInt(m) - 1) === mes && parseInt(y) === ano;
       }
       
-      // 2. Recorrência: Se não tiver dia fixo, usa diasSemana (SEG-TER)
-      if (a.diasSemana && !a.dia) {
-          const dataAtual = new Date(ano, mes, dia);
-          const dSem = dataAtual.getDay(); // 0-6
-          const map = {"DOM":0,"SEG":1,"TER":2,"QUA":3,"QUI":4,"SEX":5,"SAB":6};
-          return a.diasSemana.split("-").some(d => map[d.trim().toUpperCase()] === dSem);
+      // 2. CHECAGEM DE RECORRÊNCIA (Só entra aqui se NÃO tiver data fixa)
+      if (a.diasSemana && String(a.diasSemana).trim() !== "") {
+          const dataCelular = new Date(ano, mes, dia);
+          const dSem = dataCelular.getDay(); // Retorna 0 (Dom) até 6 (Sáb)
+          
+          const map = {
+            "DOM": 0, "SEG": 1, "TER": 2, "QUA": 3, 
+            "QUI": 4, "SEX": 5, "SAB": 6
+          };
+
+          // Verifica se o dia da semana da célula (0-6) está na lista do aluno (ex: "SEG-TER")
+          return a.diasSemana.split("-").some(ds => map[ds.trim().toUpperCase()] === dSem);
       }
+
       return false;
     });
 
+    // Se houver alunos, cria a bolinha/marcador
     if (alunosDoDia.length > 0) {
       const tag = document.createElement("div");
       tag.className = "marcador-aluno";
