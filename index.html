@@ -266,6 +266,28 @@ body {
 const URL = "https://script.google.com/macros/s/AKfycbwYIB5IDe9fQt1gTUt8J4NSnJLeFJmGu53Q7oMenTZkJgnFi8XHeopmOu_e99a0gB5y/exec"; // coloque aqui a URL da sua API
 let alunosGlobal = [];
 let filtroAtual = "todos";
+  // Função que verifica se o aluno tem algum problema
+function verificarProblemas(aluno) {
+  const erros = [];
+
+  if (!aluno.aluno || aluno.aluno.trim() === "") {
+    erros.push("Nome não definido");
+  }
+
+  if (!aluno.segmento || aluno.segmento.trim() === "") {
+    erros.push("Segmento não definido");
+  }
+
+  if (!aluno.curso || aluno.curso.trim() === "") {
+    erros.push("Curso não definido");
+  }
+
+  // Pode adicionar mais regras, por exemplo:
+  // if (!aluno.dia) erros.push("Data não definida");
+  // if (!aluno.inicio || !aluno.fim) erros.push("Horário incompleto");
+
+  return erros;
+}
 //oque  tem de errado com o aluno
 function limpar(valor){
   if(valor === null || valor === undefined) return "";
