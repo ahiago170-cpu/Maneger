@@ -265,6 +265,8 @@ body {
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbxcuRZnj7A56t7LREPe9wBVRsN0t0YKmDGUY6iCBPWbhfdnZtdU9zd5v9GUgy3vnkj8/exec"; // coloque aqui a URL da sua API
 let alunosGlobal = [];
+atualizarCursosChamada();
+atualizarCursos();
 let filtroAtual = "todos";
   // Função que verifica se o aluno tem algum problema
 function verificarProblemas(aluno) {
@@ -341,7 +343,7 @@ function gerarChamada() {
     listaDiv.appendChild(div);
   });
 }
-atualizarCursos();
+
 // Função de chamada apenas local
 window.confirmarChamada = function() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => {
@@ -752,7 +754,7 @@ function gerarCalendario(mes, ano, dados) {
   }
 }
 // Depois de atualizar alunosGlobal
-atualizarCursosChamada(); // Preenche o select
+ // Preenche o select
 // ATUALIZA AUTOMATICAMENTE
 atualizarPainel();
 setInterval(atualizarPainel, 5000);
