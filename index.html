@@ -296,7 +296,6 @@ function gerarChamada() {
   });
 }
 async function confirmarChamada() {
-  // Captura a lista de presenças
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => ({
     nome: sel.dataset.nome,
     status: sel.value
@@ -323,16 +322,23 @@ async function confirmarChamada() {
     y += 10;
   });
 
-  // Converter PDF para ArrayBuffer
+  // Converter PDF para Base64
   const pdfBlob = doc.output('blob');
-  const arrayBuffer = await pdfBlob.arrayBuffer();
+  const base64 = await new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result.split(',')[1]); // só pega o Base64
+    reader.readAsDataURL(pdfBlob);
+  });
 
   try {
-    // Enviar PDF diretamente para a API
+    // Enviar PDF em JSON
     const res = await fetch(URL, {
       method: "POST",
-      headers: { "Content-Type": "application/pdf" },
-      body: arrayBuffer
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nomeArquivo: `lista_chamada_${segmento}.pdf`,
+        arquivoBase64: base64
+      })
     });
 
     if (res.ok) {
