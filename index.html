@@ -2,303 +2,147 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Painel de Alunos - Sincronizado Drive</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+<title>Painel de Alunos - Relatórios Diretos</title>
 <style>
-/* MANTIVE SEU CSS ORIGINAL */
-.topo-container { display: flex; justify-content: center; align-items: flex-start; gap: 30px; }
-.imagem-lateral img { width: 250px; border: 2px solid #333; border-radius: 10px; }
-.layoutPrincipal { display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-top: 20px; }
-.filtroLateral { width: 260px; }
-.conteudoDireita { flex: 1; max-width: 700px; }
+    /* SEU LAYOUT ORIGINAL */
+    body { font-family: Arial, sans-serif; text-align: center; background: #f5f5f5; color: #111; }
+    .layoutPrincipal { display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-top: 20px; }
+    .area { display: inline-block; width: 260px; height: 320px; margin: 10px; border: 3px solid #333; border-radius: 10px; background: white; vertical-align: top; overflow: hidden; }
+    .area-chamada { height: 450px; width: 300px; }
+    .titulo { font-weight: bold; padding: 10px; background: #eee; border-bottom: 1px solid #ccc; }
+    .lista { height: 250px; overflow-y: auto; text-align: left; padding: 10px; font-size: 14px; }
+    #listaChamadaAlunos { height: 300px; }
+    
+    /* PÁTIO */
+    #patio { margin: 20px auto; padding: 15px; max-width: 700px; background: #ffe5e5; border: 3px dashed red; border-radius: 10px; }
+    .alunoErro { background: red; color: white; padding: 8px; border-radius: 8px; margin: 5px; font-weight: bold; font-size: 12px; display: inline-block; text-align: left; }
+    .alunoErro small { display: block; font-weight: normal; font-size: 10px; opacity: 0.9; }
 
-#patio { margin: 20px auto; padding: 15px; max-width: 700px; background: #ffe5e5; border: 3px dashed red; border-radius: 10px; }
-#alunosErro { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-.alunoErro { background: red; color: white; padding: 10px; border-radius: 8px; font-weight: bold; text-align: left; min-width: 120px; animation: pular 0.8s infinite alternate; }
-.alunoErro small { display: block; font-weight: normal; font-size: 10px; margin-top: 4px; line-height: 1.1; }
-
-@keyframes pular { from { transform: translateY(0px); } to { transform: translateY(-10px); } }
-
-.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
-.modal-conteudo { background: white; padding: 20px; border-radius: 10px; width: 300px; max-height: 400px; overflow-y: auto; }
-.fechar { cursor: pointer; float: right; font-weight: bold; }
-
-body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111; }
-.area { display: inline-block; width: 260px; height: 300px; margin: 10px; border: 3px solid #333; border-radius: 10px; background: white; vertical-align: top; }
-.area-chamada { height: 400px; } 
-
-.titulo { font-weight: bold; padding: 5px; background: #eee; }
-.lista { height: 240px; overflow-y: auto; text-align: left; padding: 5px; font-size: 14px; }
-#listaChamadaAlunos { height: 250px; }
-
-#calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 700px; margin: 20px auto; }
-.dia { border: 1px solid #ccc; min-height: 60px; padding: 5px; text-align: left; background: #fdfdfd; position: relative; }
-.dia h4 { margin: 0; font-size: 14px; }
-
-.item-chamada { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 5px 0; align-items: center; }
-.btn-pdf { background: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 90%; margin-top: 10px; }
-.btn-pdf:disabled { background: #ccc; }
+    /* CHAMADA */
+    .item-chamada { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 5px 0; }
+    .sel-presenca { padding: 2px; border-radius: 4px; border: 1px solid #ccc; }
+    .btn-salvar { background: #28a745; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 90%; margin-top: 10px; transition: 0.3s; }
+    .btn-salvar:hover { background: #218838; }
+    .btn-salvar:disabled { background: #ccc; cursor: not-allowed; }
 </style>
 </head>
-
 <body>
 
-<h1>Painel de Alunos</h1>
-
-<div style="margin:20px;">
-  <input type="text" id="buscaNome" placeholder="🔍 Buscar aluno..." style="padding:8px; width:200px; border-radius:8px; border:1px solid #ccc;">
-  <br><br>
-  <button onclick="filtrar('todos')">Todos</button>
-  <button onclick="filtrar('integral')">Integral</button>
-  <button onclick="filtrar('extra')">Extra</button>
-  <button onclick="filtrar('quadra')">Quadra</button>
-  <button onclick="filtrar('l/c')">L/C</button>
-</div>
-
-<p>Atualizado: <span id="hora"></span></p>
-
-<div class="layoutPrincipal">
-  <div class="filtroLateral">
-    <div class="area">
-      <div class="titulo">Filtro: <span id="nomeFiltro">Todos</span> (<span id="qtdFiltro">0</span>)</div>
-      <div class="lista" id="listaFiltro"></div>
-    </div>
-
-    <div class="area area-chamada">
-      <div class="titulo">📋 Lista de Chamada</div>
-      <select id="escolherCurso" onchange="gerarListaParaChamada()" style="width: 90%; margin: 5px;">
-          <option value="">Escolha o curso...</option>
-      </select>
-      <div class="lista" id="listaChamadaAlunos"></div>
-      <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
-    </div>
-  </div>
-
-  <div class="conteudoDireita">
-    <div class="topo-container">
-      <div id="calendario"></div>
-      <div class="imagem-lateral"><img src="tabela.png" alt="Tabela"></div>
-    </div>
-  </div>
-</div>
+<h1>Painel de Gestão de Alunos</h1>
 
 <div id="patio">
-  <h2>🚨 PÁTIO (Alunos com problema)</h2>
-  <div id="alunosErro"></div>
+    <h3>🚨 PÁTIO (Dados Incompletos)</h3>
+    <div id="alunosErro"></div>
 </div>
 
-<div class="area"><div class="titulo">Integral</div><div class="lista" id="listaIntegral"></div></div>
-<div class="area"><div class="titulo">Extra</div><div class="lista" id="listaExtra"></div></div>
-<div class="area"><div class="titulo">Quadra</div><div class="lista" id="listaQuadra"></div></div>
-<div class="area"><div class="titulo">Lição de Casa</div><div class="lista" id="listaLC"></div></div>
-<div class="area"><div class="titulo">(Mês/dia)Curso</div><div class="lista" id="listaDia"></div></div>
-<div class="area"><div class="titulo">Resumo Geral</div><div class="lista" id="resumo"></div></div>
+<div class="layoutPrincipal">
+    <div class="area area-chamada">
+        <div class="titulo">📋 Chamada por Curso</div>
+        <select id="escolherCurso" onchange="gerarListaParaChamada()" style="width: 90%; margin: 10px; padding: 5px;">
+            <option value="">Selecione o Curso...</option>
+        </select>
+        <div class="lista" id="listaChamadaAlunos"></div>
+        <button id="btnSalvar" class="btn-salvar" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
+    </div>
 
-<div id="modal" class="modal">
-  <div class="modal-conteudo">
-    <span class="fechar" onclick="fecharModal()">X</span>
-    <h3 id="tituloDia"></h3>
-    <div id="listaModal"></div>
-  </div>
+    <div class="area">
+        <div class="titulo">Alunos por Segmento</div>
+        <div class="lista" id="listaResumo"></div>
+    </div>
 </div>
 
-<script>      
-const URL = "https://script.google.com/macros/s/AKfycbwGnPlCPIe0ITx3g5M4W6QKBNsgc-6kwesO3j52kziSHK8hELTB5EtVPjrHVMA7QAbr/exec"; // Certifique-se de usar a URL mais recente do deploy
+<script>
+const URL = "https://script.google.com/macros/s/AKfycbwGnPlCPIe0ITx3g5M4W6QKBNsgc-6kwesO3j52kziSHK8hELTB5EtVPjrHVMA7QAbr/exec"; // <--- COLOQUE SUA URL AQUI
 let alunosGlobal = [];
-let filtroAtual = "todos";
-
-function verificarProblemas(aluno) {
-  let erros = [];
-  if (!aluno.aluno) erros.push("❌ Nome");
-  if (!aluno.curso) erros.push("❌ Curso");
-  if (!aluno.segmento) erros.push("❌ Segmento");
-  return erros;
-}
 
 async function atualizarPainel() {
-  try {
-    const resposta = await fetch(URL);
-    alunosGlobal = await resposta.json();
-    
-    const patio = document.getElementById("alunosErro");
-    patio.innerHTML = "";
-    alunosGlobal.filter(a => verificarProblemas(a).length > 0).forEach(a => {
-      patio.innerHTML += `<div class="alunoErro">⚠️ ${a.aluno || "Sem Nome"} <small>${verificarProblemas(a).join("<br>")}</small></div>`;
-    });
+    try {
+        const resposta = await fetch(URL);
+        alunosGlobal = await resposta.json();
+        
+        // Atualiza Cursos no Select
+        const select = document.getElementById("escolherCurso");
+        const cursos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c))].sort();
+        select.innerHTML = '<option value="">Selecione o Curso...</option>';
+        cursos.forEach(c => select.innerHTML += `<option value="${c}">${c}</option>`);
 
-    const select = document.getElementById("escolherCurso");
-    const valorAntigo = select.value;
-    const cursos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c))];
-    select.innerHTML = '<option value="">Escolha o curso...</option>';
-    cursos.sort().forEach(c => select.innerHTML += `<option value="${c}">${c}</option>`);
-    select.value = valorAntigo;
+        // Atualiza Pátio (Erros Visíveis)
+        const patio = document.getElementById("alunosErro");
+        patio.innerHTML = "";
+        alunosGlobal.forEach(a => {
+            let erros = [];
+            if (!a.segmento) erros.push("Falta Segmento");
+            if (!a.inicio) erros.push("Falta Horário");
+            
+            if (erros.length > 0) {
+                patio.innerHTML += `<div class="alunoErro">⚠️ ${a.aluno} <small>${erros.join(" | ")}</small></div>`;
+            }
+        });
 
-    renderizarCaixasSegmentos();
-    filtrar(filtroAtual);
-
-    const agora = new Date();
-    document.getElementById("hora").innerText = agora.getHours() + ":" + String(agora.getMinutes()).padStart(2,'0');
-  } catch (e) { console.error(e); }
+    } catch (e) { console.error("Erro ao carregar dados:", e); }
 }
 
-function renderizarCaixasSegmentos() {
-    let int = [], ext = [], qua = [], lc = [], diaC = [];
-    alunosGlobal.forEach(item => {
-        let seg = (item.segmento || "").toLowerCase();
-        let txt = "👤 " + item.aluno + " (" + (item.inicio || "").substring(0,5) + ")";
-        if(seg === "integral") int.push(txt);
-        else if(seg === "extra") ext.push(txt);
-        else if(seg === "quadra") qua.push(txt);
-        else if(seg === "l/c") lc.push(txt);
-        diaC.push(item.aluno + " - " + (item.dia || "Sem data"));
-    });
-    document.getElementById("listaIntegral").innerHTML = int.join("<br>");
-    document.getElementById("listaExtra").innerHTML = ext.join("<br>");
-    document.getElementById("listaQuadra").innerHTML = qua.join("<br>");
-    document.getElementById("listaLC").innerHTML = lc.join("<br>");
-    document.getElementById("listaDia").innerHTML = diaC.join("<br>");
-    document.getElementById("resumo").innerHTML = `Total: ${alunosGlobal.length}`;
-}
-
-function filtrar(tipo) {
-  filtroAtual = tipo;
-  const busca = document.getElementById("buscaNome").value.toLowerCase();
-  const filtrados = alunosGlobal.filter(a => {
-    const bateTipo = (tipo === "todos") || ((a.segmento || "").toLowerCase() === tipo);
-    const bateBusca = (a.aluno || "").toLowerCase().includes(busca);
-    return bateTipo && bateBusca;
-  });
-  const listaF = document.getElementById("listaFiltro");
-  listaF.innerHTML = "";
-  filtrados.forEach(a => listaF.innerHTML += `👤 ${a.aluno}<br>`);
-  document.getElementById("nomeFiltro").innerText = tipo.toUpperCase();
-  document.getElementById("qtdFiltro").innerText = filtrados.length;
-  gerarCalendario(new Date().getMonth(), new Date().getFullYear(), filtrados);
-}
-
-// CORREÇÃO AQUI: ADICIONEI O data-segmento NO SELECT
 function gerarListaParaChamada() {
     const curso = document.getElementById("escolherCurso").value;
-    const container = document.getElementById("listaChamadaAlunos");
-    container.innerHTML = "";
-    if(!curso) return;
-    
-    alunosGlobal.filter(a => a.curso === curso).sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
-        container.innerHTML += `
+    const lista = document.getElementById("listaChamadaAlunos");
+    lista.innerHTML = "";
+    if (!curso) return;
+
+    alunosGlobal.filter(a => a.curso === curso).forEach(a => {
+        lista.innerHTML += `
             <div class="item-chamada">
                 <span>${a.aluno}</span>
                 <select class="sel-presenca" data-aluno="${a.aluno}" data-segmento="${a.segmento}">
-                    <option value="✅ PRESENTE">✅ (V)</option>
-                    <option value="❌ FALTOU">❌ (X)</option>
+                    <option value="PRESENTE">✅</option>
+                    <option value="FALTA">❌</option>
                 </select>
             </div>`;
     });
 }
 
+// ESTA É A FUNÇÃO QUE ENVIA PARA A ABA "RELATÓRIOS"
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const btn = document.getElementById("btnSalvar");
-    
-    if(!curso) return alert("Selecione um curso para fazer a chamada!");
+    const inputs = document.querySelectorAll(".sel-presenca");
 
-    btn.innerText = "⏳ Gravando na Planilha...";
+    if (!curso || inputs.length === 0) return alert("Selecione um curso com alunos!");
+
+    btn.innerText = "⏳ Salvando...";
     btn.disabled = true;
 
-    const dataHoje = new Date().toLocaleDateString();
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
     let dadosParaEnviar = [];
 
-    // Coleta os dados de cada linha da chamada
-    document.querySelectorAll(".sel-presenca").forEach(select => {
-        const nome = select.getAttribute("data-aluno");
-        const presenca = select.value;
-        const infoAluno = alunosGlobal.find(a => a.aluno === nome) || {};
-
+    inputs.forEach(sel => {
         dadosParaEnviar.push({
-            nome: nome,
-            segmento: infoAluno.segmento || "",
-            presenca: presenca,
+            nome: sel.getAttribute("data-aluno"),
+            segmento: sel.getAttribute("data-segmento"),
+            presenca: sel.value,
             data: dataHoje
         });
     });
-
-    if (dadosParaEnviar.length === 0) {
-        alert("Não há alunos na lista para salvar.");
-        btn.disabled = false;
-        return;
-    }
 
     try {
         const response = await fetch(URL, {
             method: 'POST',
             body: JSON.stringify({ alunos: dadosParaEnviar })
         });
-
-        const texto = await response.text();
+        const resultado = await response.text();
+        alert(resultado); // Vai mostrar "✅ Relatório enviado com sucesso!"
         
-        if (texto.includes("✅")) {
-            alert(texto);
-            // Opcional: limpar a lista após salvar
-            document.getElementById("listaChamadaAlunos").innerHTML = "";
-            document.getElementById("escolherCurso").value = "";
-        } else {
-            alert("Erro ao salvar: " + texto);
-        }
+        // Limpa a tela após sucesso
+        document.getElementById("listaChamadaAlunos").innerHTML = "";
+        document.getElementById("escolherCurso").value = "";
     } catch (e) {
-        alert("Erro de conexão com o Google Sheets.");
-        console.error(e);
+        alert("Erro de conexão com o servidor.");
     } finally {
         btn.innerText = "Confirmar e Salvar no Sheets 📊";
         btn.disabled = false;
     }
 }
 
-// RESTANTE DAS FUNÇÕES (CALENDÁRIO/MODAL) MANTIDAS
-function gerarCalendario(mes, ano, dados) {
-  const calendario = document.getElementById("calendario");
-  calendario.innerHTML = "";
-  const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
-  diasSemana.forEach(d => {
-    const div = document.createElement("div"); div.className="dia"; div.style.fontWeight="bold"; div.innerText=d;
-    calendario.appendChild(div);
-  });
-  const primeiroDia = new Date(ano, mes, 1).getDay();
-  const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-  for (let i = 0; i < primeiroDia; i++) { calendario.appendChild(document.createElement("div")).className="dia"; }
-  for (let dia = 1; dia <= ultimoDia; dia++) {
-    const divDia = document.createElement("div"); divDia.className="dia";
-    divDia.innerHTML = `<h4>${dia}</h4>`;
-    const alunosDoDia = dados.filter(a => {
-      if (a.dia && a.dia.split("-")[2] == dia) return true;
-      if (a.diasSemana) {
-        const dSem = new Date(ano, mes, dia).getDay();
-        const map = {"DOM":0,"SEG":1,"TER":2,"QUA":3,"QUI":4,"SEX":5,"SAB":6};
-        return a.diasSemana.split("-").some(d => map[d] === dSem);
-      }
-      return false;
-    });
-    if (alunosDoDia.length > 0) {
-      divDia.innerHTML += `<div style="font-size:10px; font-weight:bold;">🎯 ${alunosDoDia.length}</div>`;
-      divDia.onclick = () => abrirModal(dia, mes, ano, alunosDoDia);
-      divDia.style.cursor = "pointer";
-    }
-    calendario.appendChild(divDia);
-  }
-}
-
-function abrirModal(dia, mes, ano, alunos) {
-  document.getElementById("tituloDia").innerText = `Dia ${dia}/${mes+1}`;
-  const lista = document.getElementById("listaModal");
-  lista.innerHTML = "";
-  alunos.forEach(a => { lista.innerHTML += `<div><b>${a.aluno}</b> (${a.curso})</div>`; });
-  document.getElementById("modal").style.display = "flex";
-}
-function fecharModal() { document.getElementById("modal").style.display = "none"; }
-
-document.getElementById("buscaNome").addEventListener("input", () => filtrar(filtroAtual));
 atualizarPainel();
-setInterval(atualizarPainel, 60000);
 </script>
-
 </body>
 </html>
