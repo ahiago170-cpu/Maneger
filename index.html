@@ -322,22 +322,8 @@ function gerarChamada() {
     listaDiv.appendChild(div);
   });
 }
-function atualizarSegmentosChamada() {
-  const select = document.getElementById("selecionaSegmento");
-  select.innerHTML = '<option value="">Escolha o curso</option>';
 
-  const cursosUnicos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c && c.trim() !== ""))];
 
-  cursosUnicos.forEach(curso => {
-    const option = document.createElement("option");
-    option.value = curso;
-    option.innerText = curso;
-    select.appendChild(option);
-  });
-}
-
-// Chame depois que a API carregar os alunos
-atualizarCursos();
 // Função de chamada apenas local
 window.confirmarChamada = function() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => {
@@ -750,7 +736,7 @@ function gerarCalendario(mes, ano, dados) {
 
 // ATUALIZA AUTOMATICAMENTE
 atualizarPainel();
-atualizarSegmentosChamada();
+
 setInterval(atualizarPainel, 5000);
 document.getElementById("buscaNome").addEventListener("input", () => {
   filtrar(filtroAtual);
