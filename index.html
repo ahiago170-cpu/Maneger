@@ -293,22 +293,26 @@ function limpar(valor){
   return String(valor).trim();
 }
 // gerador de lista de chamada
+// Novo gerarChamada() filtrando por curso
 function gerarChamada() {
-  const segmento = document.getElementById("selecionaSegmento").value;
+  const cursoSelecionado = document.getElementById("selecionaSegmento").value; // aqui usa o mesmo select, mas agora vai ser o curso
   const listaDiv = document.getElementById("listaChamada");
   listaDiv.innerHTML = "";
 
-  if(!segmento) return;
+  if (!cursoSelecionado) return;
 
-  const alunosDoSegmento = alunosGlobal.filter(a => (a.segmento || "").toLowerCase() === segmento);
+  // Filtra alunos pelo curso, ignorando maiúsculas/minúsculas
+  const alunosDoCurso = alunosGlobal.filter(a => 
+    (a.curso || "").toLowerCase() === cursoSelecionado.toLowerCase()
+  );
 
-  alunosDoSegmento.forEach(a => {
+  alunosDoCurso.forEach(a => {
     const div = document.createElement("div");
     div.style.marginBottom = "5px";
 
     div.innerHTML = `
-      <span>${a.aluno} (${a.curso || "-"})</span>
-      <select class="presenca" data-nome="${a.aluno}">
+      <span>${a.aluno}</span>
+      <select class="presenca" data-nome="${a.aluno}" data-curso="${a.curso}">
         <option value="v">✅ Presente</option>
         <option value="x">❌ Faltou</option>
       </select>
@@ -323,7 +327,7 @@ window.confirmarChamada = function() {
 
     return {
       nome: String(aluno.aluno || sel.dataset.nome || "-"),
-      presenca: sel.value === "v" ? "✅" : "❌",
+      presenca: sel.value === "v" ? "(V)" : "(X)",
       segmento: String(aluno.segmento || "-"),
       dia: String(aluno.dia || new Date().toISOString().split("T")[0]),
       inicio: String(aluno.inicio || "-"),
@@ -348,8 +352,8 @@ window.confirmarChamada = function() {
   // largura das colunas proporcional
   const colWidths = {
     nome: 0.25 * usableWidth,
-    presenca: 0.10 * usableWidth,
-    horario: 0.15 * usableWidth,
+    presenca: 0.8 * usableWidth,
+    horario: 0.25* usableWidth,
     curso: 0.20 * usableWidth,
     segmento: 0.15 * usableWidth
     // professor não entra na linha, vai no topo
