@@ -317,7 +317,7 @@ function gerarChamada() {
     listaDiv.appendChild(div);
   });
 }
-async function enviarPresenca() {
+async function confirmarChamada() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => ({
     nome: sel.dataset.nome,
     segmento: document.getElementById("selecionaSegmento").value,
@@ -331,7 +331,7 @@ async function enviarPresenca() {
   }
 
   try {
-    const res = await fetch("COLE_AQUI_A_URL_DO_SEU_APPS_SCRIPT", {
+    const res = await fetch("https://script.google.com/macros/s/AKfycbwmgCkO7h4aPbtV0YKLOBDUdb8m5nHJIOIyVWLmRjH64c7jC7BzAv1BWl6zX5qLgOci/exec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(presencas)
