@@ -307,27 +307,7 @@ async function confirmarChamada() {
     return;
   }
 
-  // 1️⃣ Gerar PDF
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.setFontSize(16);
-  doc.text("Lista de Chamada", 20, 20);
-
-  const segmento = document.getElementById("selecionaSegmento").value;
-  doc.setFontSize(12);
-  doc.text("Segmento: " + segmento, 20, 30);
-
-  let y = 40;
-  presencas.forEach(p => {
-    doc.text(`${p.nome} - ${p.status === "v" ? "✅ Presente" : "❌ Faltou"}`, 20, y);
-    y += 10;
-  });
-
-  // 2️⃣ Baixar PDF no navegador
-  // Aqui usamos o método interno do jsPDF que é mais seguro
-  doc.save("lista_chamada.pdf"); // <-- corrige o erro de URL.createObjectURL
-
-  // 3️⃣ Enviar dados para a API (sem PDF)
+  // Apenas enviar dados para API (não envia PDF do navegador)
   try {
     const res = await fetch(URL, {
       method: "POST",
@@ -336,7 +316,7 @@ async function confirmarChamada() {
     });
     const json = await res.json();
     if(json.success){
-      alert("Chamada registrada com sucesso no Sheets!");
+      alert("Chamada registrada e PDF gerado no Drive!\n" + json.url);
     } else {
       alert("Erro ao registrar chamada: " + json.message);
     }
