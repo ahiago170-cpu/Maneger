@@ -295,11 +295,12 @@ function gerarChamada() {
     listaDiv.appendChild(div);
   });
 }
-async function confirmarChamada() {
+async function enviarPresenca() {
   const presencas = Array.from(document.querySelectorAll(".presenca")).map(sel => ({
     nome: sel.dataset.nome,
     segmento: document.getElementById("selecionaSegmento").value,
-    status: sel.value
+    presenca: sel.value,
+    dia: new Date().toISOString().split("T")[0] // só YYYY-MM-DD
   }));
 
   if(presencas.length === 0){
@@ -307,44 +308,22 @@ async function confirmarChamada() {
     return;
   }
 
-  // Apenas enviar dados para API (não envia PDF do navegador)
   try {
-    const res = await fetch(URL, {
+    const res = await fetch("COLE_AQUI_A_URL_DO_SEU_APPS_SCRIPT", {
       method: "POST",
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(presencas)
     });
-    const json = await res.json();
-    if(json.success){
-      alert("Chamada registrada e PDF gerado no Drive!\n" + json.url);
-    } else {
-      alert("Erro ao registrar chamada: " + json.message);
-    }
+
+    const data = await res.json();
+
+    if(data.status === "ok") alert("Presenças enviadas com sucesso!");
+    else alert("Erro: " + data.message);
+
   } catch(e) {
     console.error(e);
-    alert("Erro ao enviar dados para o Sheets");
+    alert("Erro ao enviar os dados: " + e.message);
   }
-}
-function verificarProblemas(aluno) {
-  let erros = [];
-
-  const curso = (aluno.curso || "").trim();
-  const segmento = (aluno.segmento || "").trim();
-  const dia = (aluno.dia || "").trim();
-  const diasSemana = (aluno.diasSemana || "").trim();
-  const inicio = (aluno.inicio || "").toString().trim();
-  const fim = (aluno.fim || "").toString().trim();
-
-  if (!curso) erros.push("❌ Curso");
-  if (!segmento) erros.push("❌ Segmento");
-
-  // 🔥 AGORA QUALQUER FALTA É ERRO
-  if (!dia) erros.push("📅 Sem data");
-  if (!diasSemana) erros.push("📆 Sem semana");
-
-  if (!inicio || !fim) erros.push("⏰ Sem horário");
-
-  return erros;
 }
 // LIMPAR HORA
 
