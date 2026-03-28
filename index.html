@@ -92,7 +92,7 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
           <option value="">Escolha o curso...</option>
       </select>
       <div class="lista" id="listaChamadaAlunos"></div>
-      <button class="btn-pdf" onclick="imprimirPDF()">Confirmar e Gerar PDF</button>
+      <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
     </div>
   </div>
 
@@ -231,54 +231,61 @@ function gerarListaParaChamada() {
 }
 
 // MELHORIA 1: PDF COM COLUNAS NOME, PRESENÇA, SEGMENTO, CURSO E DATA
-function imprimirPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const cursoSelecionado = document.getElementById("escolherCurso").value;
-    if(!cursoSelecionado) return alert("Selecione um curso!");
+async function salvarRelatorioNoSheets() {
+    const curso = document.getElementById("escolherCurso").value;
+    const btn = document.getElementById("btnSalvar");
+    
+    if(!curso) return alert("Selecione um curso para fazer a chamada!");
+
+    btn.innerText = "⏳ Gravando na Planilha...";
+    btn.disabled = true;
 
     const dataHoje = new Date().toLocaleDateString();
+    let dadosParaEnviar = [];
 
-    // Título e Data
-    doc.setFont(undefined, 'bold');
-    doc.text("LISTA DE CHAMADA", 105, 15, { align: "center" });
-    doc.setFontSize(10);
-    doc.text(`Data: ${dataHoje}`, 10, 25);
-    doc.text(`Curso Base: ${cursoSelecionado}`, 10, 30);
+    // Coleta os dados de cada linha da chamada
+    document.querySelectorAll(".sel-presenca").forEach(select => {
+        const nome = select.getAttribute("data-aluno");
+        const presenca = select.value;
+        const infoAluno = alunosGlobal.find(a => a.aluno === nome) || {};
 
-    // Cabeçalho da Tabela
-    let y = 40;
-    doc.setFillColor(230, 230, 230);
-    doc.rect(10, y-5, 190, 7, 'F');
-    doc.text("NOME DO ALUNO", 12, y);
-    doc.text("SEGMENTO", 80, y);
-    doc.text("CURSO", 120, y);
-    doc.text("PRESENÇA", 170, y);
-    
-    y += 10;
-    doc.setFont(undefined, 'normal');
-
-    document.querySelectorAll(".sel-presenca").forEach(s => {
-        const nomeAluno = s.getAttribute("data-aluno");
-        const presenca = s.value;
-        
-        // Busca os dados completos do aluno no array global
-        const dados = alunosGlobal.find(a => a.aluno === nomeAluno) || {};
-        
-        doc.text(nomeAluno.substring(0, 30), 12, y); // Limita tamanho do nome
-        doc.text(String(dados.segmento || ""), 80, y);
-        doc.text(String(dados.curso || ""), 120, y);
-        doc.text(presenca, 175, y);
-
-        // Linha divisória fina
-        doc.setDrawColor(200);
-        doc.line(10, y+2, 200, y+2);
-        
-        y += 10;
-        if(y > 280) { doc.addPage(); y = 20; }
+        dadosParaEnviar.push({
+            nome: nome,
+            segmento: infoAluno.segmento || "",
+            presenca: presenca,
+            data: dataHoje
+        });
     });
 
-    doc.save(`Chamada_${cursoSelecionado}_${dataHoje.replace(/\//g,'-')}.pdf`);
+    if (dadosParaEnviar.length === 0) {
+        alert("Não há alunos na lista para salvar.");
+        btn.disabled = false;
+        return;
+    }
+
+    try {
+        const response = await fetch(URL, {
+            method: 'POST',
+            body: JSON.stringify({ alunos: dadosParaEnviar })
+        });
+
+        const texto = await response.text();
+        
+        if (texto.includes("✅")) {
+            alert(texto);
+            // Opcional: limpar a lista após salvar
+            document.getElementById("listaChamadaAlunos").innerHTML = "";
+            document.getElementById("escolherCurso").value = "";
+        } else {
+            alert("Erro ao salvar: " + texto);
+        }
+    } catch (e) {
+        alert("Erro de conexão com o Google Sheets.");
+        console.error(e);
+    } finally {
+        btn.innerText = "Confirmar e Salvar no Sheets 📊";
+        btn.disabled = false;
+    }
 }
 
 function gerarCalendario(mes, ano, dados) {
