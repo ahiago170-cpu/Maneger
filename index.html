@@ -6,7 +6,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-/* SEU ESTILO ORIGINAL MANTIDO */
+/* ESTILOS MANTIDOS E OTIMIZADOS */
 .topo-container { display: flex; justify-content: center; align-items: flex-start; gap: 30px; }
 .imagem-lateral img { width: 250px; border: 2px solid #333; border-radius: 10px; }
 .layoutPrincipal { display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-top: 20px; }
@@ -49,12 +49,11 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 #listaChamadaAlunos { height: 250px; }
 
 #calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 700px; margin: 20px auto; }
-.dia { border: 1px solid #ccc; min-height: 60px; padding: 5px; text-align: left; background: #fdfdfd; position: relative; }
-.dia h4 { margin: 0; font-size: 14px; }
-.aluno { color: #000; font-weight: bold; border-left: 4px solid #333; }
+.dia-cell { border: 1px solid #ccc; min-height: 70px; padding: 5px; text-align: left; background: #fdfdfd; position: relative; }
+.dia-cell h4 { margin: 0; font-size: 14px; color: #555; }
+.marcador-aluno { background: #007bff; color: white; font-size: 10px; padding: 2px 4px; border-radius: 4px; margin-top: 2px; font-weight: bold; cursor: pointer; }
 
 .item-chamada { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 3px 0; }
-.sel-presenca { font-size: 12px; }
 .btn-pdf { background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 90%; margin-top: 10px; }
 </style>
 </head>
@@ -145,6 +144,7 @@ async function atualizarPainel() {
     const resposta = await fetch(URL);
     alunosGlobal = await resposta.json();
     
+    // Atualiza Pátio (Erros)
     const patio = document.getElementById("alunosErro");
     patio.innerHTML = "";
     alunosGlobal.filter(a => verificarProblemas(a).length > 0).forEach(a => {
@@ -152,10 +152,10 @@ async function atualizarPainel() {
       const div = document.createElement("div");
       div.className = "alunoErro";
       div.innerHTML = `⚠️ ${a.aluno || "Sem Nome"} <small>${erros.join("<br>")}</small>`;
-      div.onclick = () => alert("Aluno: " + (a.aluno || "Sem Nome") + "\nDetalhes:\n" + erros.join("\n"));
       patio.appendChild(div);
     });
 
+    // Atualiza Select de Cursos
     const select = document.getElementById("escolherCurso");
     const valorAntigo = select.value;
     const cursos = [...new Set(alunosGlobal.map(a => a.curso).filter(c => c))];
@@ -181,14 +181,14 @@ function renderizarCaixasSegmentos() {
         let seg = (item.segmento || "").toLowerCase();
         let alunoNome = item.aluno || "Sem Nome";
         let curso = item.curso || "S/C";
-        let prof = item.prof || "Sem Professor";
+        let prof = item.prof || "Sem Prof.";
         let inicio = item.inicio ? item.inicio.substring(0,5) : "--:--";
         let fim = item.fim ? item.fim.substring(0,5) : "--:--";
 
-        // CAMPOS 1, 2, 3 e 4 (Alunos + Inicio/Fim + Curso + Professor)
+        // MOLDURA PARA OS CAMPOS 1, 2, 3 e 4
         let txtComum = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
-                👤 <b>${alunoNome}</b> (${inicio} - ${fim})<br>
+                👤 <b>${alunoNome}</b> (${inicio}-${fim})<br>
                 📘 ${curso} | 👨‍🏫 <b>${prof}</b>
             </div>`;
 
@@ -197,24 +197,11 @@ function renderizarCaixasSegmentos() {
         else if(seg === "quadra") qua.push(txtComum);
         else if(seg === "l/c") lc.push(txtComum);
         
-        // CAMPO 5 (Aluno + Dia + Curso + Professor)
-        let dataTexto = "Sem data";
-        if (item.dia) {
-            // Tenta formatar se vier no padrão 2026-03-12 ou 12-03-2026
-            let partes = item.dia.split("-");
-            if(partes.length === 3) {
-                // Se o primeiro item tiver 4 digitos é YYYY-MM-DD
-                dataTexto = partes[0].length === 4 ? `${partes[2]}/${partes[1]}` : `${partes[0]}/${partes[1]}`;
-            } else {
-                dataTexto = item.dia;
-            }
-        } else if (item.diasSemana) {
-            dataTexto = item.diasSemana;
-        }
-
+        // MOLDURA PARA O CAMPO 5 (DATA)
+        let dataExibicao = item.dia ? item.dia : (item.diasSemana || "---");
         let txtDia = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
-                👤 <b>${alunoNome}</b> | 📅 <b>${dataTexto}</b><br>
+                👤 <b>${alunoNome}</b> | 📅 <b>${dataExibicao}</b><br>
                 📘 ${curso} | 👨‍🏫 ${prof}
             </div>`;
         diaC.push(txtDia);
@@ -226,13 +213,12 @@ function renderizarCaixasSegmentos() {
     document.getElementById("listaLC").innerHTML = lc.join("");
     document.getElementById("listaDia").innerHTML = diaC.join("");
     
-    // CAMPO 6
     document.getElementById("resumo").innerHTML = `
         <div style="text-align:left; font-size:14px;">
-            Total Alunos: ${alunosGlobal.length}<br>
-            Integral: ${int.length} | Extra: ${ext.length}<br>
-            Quadra: ${qua.length} | L/C: ${lc.length}<br>
-            <strong style="color:red;">🚨 Erros no Pátio: ${totalErros}</strong>
+            Total: ${alunosGlobal.length} alunos<br>
+            Int: ${int.length} | Ext: ${ext.length}<br>
+            Qua: ${qua.length} | L/C: ${lc.length}<br>
+            <strong style="color:red;">🚨 Pátio: ${totalErros}</strong>
         </div>`;
 }
 
@@ -256,12 +242,86 @@ function filtrar(tipo) {
   gerarCalendario(hoje.getMonth(), hoje.getFullYear(), filtrados);
 }
 
+function gerarCalendario(mes, ano, dados) {
+  const calendario = document.getElementById("calendario");
+  calendario.innerHTML = "";
+  const diasSemanaNomes = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+  
+  diasSemanaNomes.forEach(d => {
+    const div = document.createElement("div"); 
+    div.className="dia-cell"; div.style.fontWeight="bold"; div.style.minHeight="20px"; div.innerText=d;
+    calendario.appendChild(div);
+  });
+
+  const primeiroDia = new Date(ano, mes, 1).getDay();
+  const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+
+  for (let i = 0; i < primeiroDia; i++) {
+    const v = document.createElement("div"); v.className="dia-cell"; v.style.background="#f0f0f0";
+    calendario.appendChild(v);
+  }
+
+  for (let dia = 1; dia <= ultimoDia; dia++) {
+    const divDia = document.createElement("div"); 
+    divDia.className = "dia-cell";
+    divDia.innerHTML = `<h4>${dia}</h4>`;
+    
+    // --- LÓGICA DE FILTRO DO CALENDÁRIO ---
+    const alunosDoDia = dados.filter(a => {
+      // 1. Prioridade: Se houver uma data fixa (dia)
+      if (a.dia && a.dia.includes("-")) {
+          let partes = a.dia.split("-");
+          let d, m, y;
+          // Verifica se é YYYY-MM-DD ou DD-MM-YYYY
+          if (partes[0].length === 4) { [y, m, d] = partes; } 
+          else { [d, m, y] = partes; }
+
+          // Compara exatamente Ano, Mês (JS é 0-11) e Dia
+          return parseInt(y) === ano && (parseInt(m) - 1) === mes && parseInt(d) === dia;
+      }
+      
+      // 2. Recorrência: Se não tiver dia fixo, usa diasSemana (SEG-TER)
+      if (a.diasSemana && !a.dia) {
+          const dataAtual = new Date(ano, mes, dia);
+          const dSem = dataAtual.getDay(); // 0-6
+          const map = {"DOM":0,"SEG":1,"TER":2,"QUA":3,"QUI":4,"SEX":5,"SAB":6};
+          return a.diasSemana.split("-").some(d => map[d.trim().toUpperCase()] === dSem);
+      }
+      return false;
+    });
+
+    if (alunosDoDia.length > 0) {
+      const tag = document.createElement("div");
+      tag.className = "marcador-aluno";
+      tag.innerText = `🎯 ${alunosDoDia.length} Alunos`;
+      tag.onclick = () => abrirModal(dia, mes, ano, alunosDoDia);
+      divDia.appendChild(tag);
+    }
+    calendario.appendChild(divDia);
+  }
+}
+
+function abrirModal(dia, mes, ano, alunos) {
+  document.getElementById("tituloDia").innerText = `Dia ${dia}/${mes+1}/${ano}`;
+  const lista = document.getElementById("listaModal");
+  lista.innerHTML = "";
+  alunos.forEach(a => {
+    const div = document.createElement("div"); 
+    div.className="aluno " + (a.segmento||"").toLowerCase().replace("/","");
+    div.style.marginBottom = "5px";
+    div.style.padding = "5px";
+    div.innerHTML = `<b>${a.aluno}</b><br><small>${a.curso} (${a.inicio}-${a.fim})<br>Prof: ${a.prof || '---'}</small>`;
+    lista.appendChild(div);
+  });
+  document.getElementById("modal").style.display = "flex";
+}
+
+function fecharModal() { document.getElementById("modal").style.display = "none"; }
 function gerarListaParaChamada() {
     const curso = document.getElementById("escolherCurso").value;
     const container = document.getElementById("listaChamadaAlunos");
     container.innerHTML = "";
     if(!curso) return;
-
     alunosGlobal.filter(a => a.curso === curso).sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
         container.innerHTML += `
             <div class="item-chamada">
@@ -277,94 +337,20 @@ function gerarListaParaChamada() {
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const btn = document.getElementById("btnSalvar");
-    if(!curso) return alert("Selecione um curso para fazer a chamada!");
+    if(!curso) return alert("Escolha o curso!");
+    btn.disabled = true; btn.innerText = "⏳ Enviando...";
 
-    btn.innerText = "⏳ Gravando...";
-    btn.disabled = true;
-
-    const dataHoje = new Date().toLocaleDateString();
-    let dadosParaEnviar = [];
-
-    document.querySelectorAll(".sel-presenca").forEach(select => {
-        const nome = select.getAttribute("data-aluno");
-        const presenca = select.value;
-        const info = alunosGlobal.find(a => a.aluno === nome) || {};
-
-        dadosParaEnviar.push({
-            nome: nome,
-            segmento: info.segmento || "",
-            presenca: presenca,
-            data: dataHoje
-        });
+    let dados = [];
+    document.querySelectorAll(".sel-presenca").forEach(sel => {
+        dados.push({ nome: sel.dataset.aluno, presenca: sel.value, curso: curso, data: new Date().toLocaleDateString() });
     });
 
     try {
-        const response = await fetch(URL, {
-            method: 'POST',
-            body: JSON.stringify({ alunos: dadosParaEnviar })
-        });
-        const texto = await response.text();
-        alert(texto);
-    } catch (e) {
-        alert("Erro ao conectar.");
-    } finally {
-        btn.innerText = "Confirmar e Salvar no Sheets 📊";
-        btn.disabled = false;
-    }
+        await fetch(URL, { method: 'POST', body: JSON.stringify({ alunos: dados }) });
+        alert("Salvo com sucesso!");
+    } catch (e) { alert("Erro ao salvar."); }
+    btn.disabled = false; btn.innerText = "Confirmar e Salvar no Sheets 📊";
 }
-
-function gerarCalendario(mes, ano, dados) {
-  const calendario = document.getElementById("calendario");
-  calendario.innerHTML = "";
-  const diasSemana = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
-  diasSemana.forEach(d => {
-    const div = document.createElement("div"); div.className="dia"; div.style.fontWeight="bold"; div.innerText=d;
-    calendario.appendChild(div);
-  });
-
-  const primeiroDia = new Date(ano, mes, 1).getDay();
-  const ultimoDia = new Date(ano, mes + 1, 0).getDate();
-
-  for (let i = 0; i < primeiroDia; i++) {
-    const v = document.createElement("div"); v.className="dia"; v.style.background="#eee";
-    calendario.appendChild(v);
-  }
-
-  for (let dia = 1; dia <= ultimoDia; dia++) {
-    const divDia = document.createElement("div"); divDia.className="dia";
-    divDia.innerHTML = `<h4>${dia}</h4>`;
-    const alunosDoDia = dados.filter(a => {
-      if (a.dia && a.dia.includes(String(dia).padStart(2,'0'))) return true;
-      if (a.diasSemana) {
-        const dSem = new Date(ano, mes, dia).getDay();
-        const map = {"DOM":0,"SEG":1,"TER":2,"QUA":3,"QUI":4,"SEX":5,"SAB":6};
-        return a.diasSemana.split("-").some(d => map[d] === dSem);
-      }
-      return false;
-    });
-
-    if (alunosDoDia.length > 0) {
-      const m = document.createElement("div"); m.innerText = "🎯 " + alunosDoDia.length;
-      m.style.fontSize="10px"; m.style.fontWeight="bold"; divDia.appendChild(m);
-      divDia.onclick = () => abrirModal(dia, mes, ano, alunosDoDia);
-      divDia.style.cursor = "pointer";
-    }
-    calendario.appendChild(divDia);
-  }
-}
-
-function abrirModal(dia, mes, ano, alunos) {
-  document.getElementById("tituloDia").innerText = `Dia ${dia}/${mes+1}`;
-  const lista = document.getElementById("listaModal");
-  lista.innerHTML = "";
-  alunos.forEach(a => {
-    const div = document.createElement("div"); div.className="aluno " + (a.segmento||"").toLowerCase().replace("/","");
-    div.innerText = a.aluno + " (" + (a.curso||"") + ")";
-    lista.appendChild(div);
-  });
-  document.getElementById("modal").style.display = "flex";
-}
-function fecharModal() { document.getElementById("modal").style.display = "none"; }
 
 document.getElementById("buscaNome").addEventListener("input", () => filtrar(filtroAtual));
 atualizarPainel();
