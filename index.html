@@ -132,6 +132,7 @@ let filtroAtual = "todos";
 function verificarProblemas(aluno) {
   let erros = [];
   if (!aluno.aluno) erros.push("❌ Nome");
+  if (!aluno.serie) erros.push("❌ Série"); // INSTRUÇÃO: Gera erro se não vier série
   if (!aluno.curso) erros.push("❌ Curso");
   if (!aluno.segmento) erros.push("❌ Segmento");
   if (!aluno.dia && !aluno.diasSemana) erros.push("📅 Data/Semana");
@@ -178,14 +179,16 @@ function renderizarCaixasSegmentos() {
 
         let seg = (item.segmento || "").toLowerCase();
         let alunoNome = item.aluno || "Sem Nome";
+        let alunoSerie = item.serie || "S/S"; // INSTRUÇÃO: Captura a série
         let curso = item.curso || "S/C";
         let prof = item.prof || "Sem Prof.";
         let inicio = item.inicio ? item.inicio.substring(0,5) : "--:--";
         let fim = item.fim ? item.fim.substring(0,5) : "--:--";
 
+        // INSTRUÇÃO: Série na frente do nome
         let txtComum = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
-                👤 <b>${alunoNome}</b> (${inicio}-${fim})<br>
+                👤 <b>[${alunoSerie}] ${alunoNome}</b> (${inicio}-${fim})<br>
                 📘 ${curso} | 👨‍🏫 <b>${prof}</b>
             </div>`;
 
@@ -195,9 +198,10 @@ function renderizarCaixasSegmentos() {
         else if(seg === "l/c") lc.push(txtComum);
         
         let dataExibicao = item.dia ? item.dia : (item.diasSemana || "---");
+        // INSTRUÇÃO: Série na frente do nome
         let txtDia = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
-                👤 <b>${alunoNome}</b> | 📅 <b>${dataExibicao}</b><br>
+                👤 <b>[${alunoSerie}] ${alunoNome}</b> | 📅 <b>${dataExibicao}</b><br>
                 📘 ${curso} | 👨‍🏫 ${prof}
             </div>`;
         diaC.push(txtDia);
@@ -230,7 +234,8 @@ function filtrar(tipo) {
     return bateTipo && bateBusca;
   });
 
-  filtrados.forEach(a => listaFiltro.innerHTML += `👤 ${a.aluno} (${a.curso || ''})<br>`);
+  // INSTRUÇÃO: Série na frente do nome
+  filtrados.forEach(a => listaFiltro.innerHTML += `👤 [${a.serie || 'S/S'}] ${a.aluno} (${a.curso || ''})<br>`);
   document.getElementById("nomeFiltro").innerText = tipo.toUpperCase();
   document.getElementById("qtdFiltro").innerText = filtrados.length;
 
@@ -313,7 +318,8 @@ function abrirModal(dia, mes, ano, alunos) {
     div.className="aluno " + (a.segmento||"").toLowerCase().replace("/","");
     div.style.marginBottom = "5px";
     div.style.padding = "5px";
-    div.innerHTML = `<b>${a.aluno}</b><br><small>${a.curso} (${a.inicio}-${a.fim})<br>Prof: ${a.prof || '---'}</small>`;
+    // INSTRUÇÃO: Série na frente do nome
+    div.innerHTML = `<b>[${a.serie || 'S/S'}] ${a.aluno}</b><br><small>${a.curso} (${a.inicio}-${a.fim})<br>Prof: ${a.prof || '---'}</small>`;
     lista.appendChild(div);
   });
   document.getElementById("modal").style.display = "flex";
@@ -326,9 +332,10 @@ function gerarListaParaChamada() {
     container.innerHTML = "";
     if(!curso) return;
     alunosGlobal.filter(a => a.curso === curso).sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
+        // INSTRUÇÃO: Série na frente do nome na chamada também para facilitar
         container.innerHTML += `
             <div class="item-chamada">
-                <span>${a.aluno}</span>
+                <span><b>[${a.serie || 'S/S'}]</b> ${a.aluno}</span>
                 <select class="sel-presenca" data-aluno="${a.aluno}">
                     <option value="(V)">✅ (V)</option>
                     <option value="(X)">❌ (X)</option>
