@@ -6,7 +6,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-/* ESTILOS MANTIDOS E OTIMIZADOS */
+/* ESTILOS MANTIDOS */
 .topo-container { display: flex; justify-content: center; align-items: flex-start; gap: 30px; }
 .imagem-lateral img { width: 250px; border: 2px solid #333; border-radius: 10px; }
 .layoutPrincipal { display: flex; justify-content: center; align-items: flex-start; gap: 30px; margin-top: 20px; }
@@ -125,14 +125,17 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 </div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbzitzQt9xz4l49S_be97noAE483kICY1TDnn2HXIpUmcmUB58MuYDdpKbG13g1S12Ea/exec";
+const URL = "https://script.google.com/macros/s/AKfycbxTv34eLLa3-Ff2rF0Z3_fPZNZAZOq8CY1mE8fFYECT8Y4bHzmmVibLtDu8QwD4U2gN/exec";
 let alunosGlobal = [];
 let filtroAtual = "todos";
 
+// ---------------------------------------------------------
+// AJUSTE: VERIFICAÇÃO DA SÉRIE PARA MANDAR PRO PÁTIO
+// ---------------------------------------------------------
 function verificarProblemas(aluno) {
   let erros = [];
   if (!aluno.aluno) erros.push("❌ Nome");
-  if (!aluno.serie) erros.push("❌ Série"); // INSTRUÇÃO: Gera erro se não vier série
+  if (!aluno.serie || aluno.serie.trim() === "") erros.push("❌ Série"); // Se não vier série, ERRO!
   if (!aluno.curso) erros.push("❌ Curso");
   if (!aluno.segmento) erros.push("❌ Segmento");
   if (!aluno.dia && !aluno.diasSemana) erros.push("📅 Data/Semana");
@@ -151,7 +154,8 @@ async function atualizarPainel() {
       const erros = verificarProblemas(a);
       const div = document.createElement("div");
       div.className = "alunoErro";
-      div.innerHTML = `⚠️ ${a.aluno || "Sem Nome"} <small>${erros.join("<br>")}</small>`;
+      // Exibe "Sem Série" se o campo estiver vazio
+      div.innerHTML = `⚠️ [${a.serie || "S/S"}] ${a.aluno || "Sem Nome"} <small>${erros.join("<br>")}</small>`;
       patio.appendChild(div);
     });
 
@@ -179,16 +183,16 @@ function renderizarCaixasSegmentos() {
 
         let seg = (item.segmento || "").toLowerCase();
         let alunoNome = item.aluno || "Sem Nome";
-        let alunoSerie = item.serie || "S/S"; // INSTRUÇÃO: Captura a série
+        let serie = item.serie || "S/S"; // Captura a série
         let curso = item.curso || "S/C";
         let prof = item.prof || "Sem Prof.";
         let inicio = item.inicio ? item.inicio.substring(0,5) : "--:--";
         let fim = item.fim ? item.fim.substring(0,5) : "--:--";
 
-        // INSTRUÇÃO: Série na frente do nome
+        // AJUSTE: SÉRIE NA FRENTE DO NOME
         let txtComum = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
-                👤 <b>[${alunoSerie}] ${alunoNome}</b> (${inicio}-${fim})<br>
+                👤 <b>[${serie}] ${alunoNome}</b> (${inicio}-${fim})<br>
                 📘 ${curso} | 👨‍🏫 <b>${prof}</b>
             </div>`;
 
@@ -198,10 +202,9 @@ function renderizarCaixasSegmentos() {
         else if(seg === "l/c") lc.push(txtComum);
         
         let dataExibicao = item.dia ? item.dia : (item.diasSemana || "---");
-        // INSTRUÇÃO: Série na frente do nome
         let txtDia = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
-                👤 <b>[${alunoSerie}] ${alunoNome}</b> | 📅 <b>${dataExibicao}</b><br>
+                👤 <b>[${serie}] ${alunoNome}</b> | 📅 <b>${dataExibicao}</b><br>
                 📘 ${curso} | 👨‍🏫 ${prof}
             </div>`;
         diaC.push(txtDia);
@@ -234,7 +237,7 @@ function filtrar(tipo) {
     return bateTipo && bateBusca;
   });
 
-  // INSTRUÇÃO: Série na frente do nome
+  // AJUSTE: SÉRIE NO FILTRO
   filtrados.forEach(a => listaFiltro.innerHTML += `👤 [${a.serie || 'S/S'}] ${a.aluno} (${a.curso || ''})<br>`);
   document.getElementById("nomeFiltro").innerText = tipo.toUpperCase();
   document.getElementById("qtdFiltro").innerText = filtrados.length;
@@ -271,7 +274,6 @@ function gerarCalendario(mes, ano, dados) {
       let condicaoDiaFixo = false;
       let condicaoRecorrencia = false;
 
-      // 1. CHECAGEM DE DATA FIXA (Somente para o dia específico)
       if (a.dia && String(a.dia).trim() !== "") {
           let partes = a.dia.split("-");
           let d, m, y;
@@ -283,7 +285,6 @@ function gerarCalendario(mes, ano, dados) {
           }
       }
       
-      // 2. CHECAGEM DE RECORRÊNCIA (Aparece em todos os meses nos dias da semana definidos)
       if (a.diasSemana && String(a.diasSemana).trim() !== "") {
           const dataCelular = new Date(ano, mes, dia);
           const dSem = dataCelular.getDay(); 
@@ -293,8 +294,6 @@ function gerarCalendario(mes, ano, dados) {
               condicaoRecorrencia = true;
           }
       }
-
-      // Se atender a QUALQUER uma das duas condições, o aluno aparece no dia
       return condicaoDiaFixo || condicaoRecorrencia;
     });
 
@@ -318,7 +317,7 @@ function abrirModal(dia, mes, ano, alunos) {
     div.className="aluno " + (a.segmento||"").toLowerCase().replace("/","");
     div.style.marginBottom = "5px";
     div.style.padding = "5px";
-    // INSTRUÇÃO: Série na frente do nome
+    // AJUSTE: SÉRIE NO MODAL
     div.innerHTML = `<b>[${a.serie || 'S/S'}] ${a.aluno}</b><br><small>${a.curso} (${a.inicio}-${a.fim})<br>Prof: ${a.prof || '---'}</small>`;
     lista.appendChild(div);
   });
@@ -326,13 +325,14 @@ function abrirModal(dia, mes, ano, alunos) {
 }
 
 function fecharModal() { document.getElementById("modal").style.display = "none"; }
+
 function gerarListaParaChamada() {
     const curso = document.getElementById("escolherCurso").value;
     const container = document.getElementById("listaChamadaAlunos");
     container.innerHTML = "";
     if(!curso) return;
     alunosGlobal.filter(a => a.curso === curso).sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
-        // INSTRUÇÃO: Série na frente do nome na chamada também para facilitar
+        // AJUSTE: SÉRIE NA LISTA DE CHAMADA
         container.innerHTML += `
             <div class="item-chamada">
                 <span><b>[${a.serie || 'S/S'}]</b> ${a.aluno}</span>
@@ -347,19 +347,14 @@ function gerarListaParaChamada() {
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const btn = document.getElementById("btnSalvar");
-    
     if(!curso) return alert("Escolha o curso!");
     
     btn.disabled = true; 
     btn.innerText = "⏳ Enviando...";
 
     let dados = [];
-    
-    // Pegamos todos os selects de presença na tela
     document.querySelectorAll(".sel-presenca").forEach(sel => {
         const nomeAluno = sel.dataset.aluno;
-        
-        // Buscamos o aluno no nosso "banco de dados" global para pegar o Segmento e o Prof
         const infoOriginal = alunosGlobal.find(a => a.aluno === nomeAluno);
 
         dados.push({ 
@@ -367,22 +362,16 @@ async function salvarRelatorioNoSheets() {
             presenca: sel.value, 
             curso: curso,
             data: new Date().toLocaleDateString('pt-BR'),
-            // Se encontrar o aluno, envia os dados dele, senão envia vazio
             segmento: infoOriginal ? infoOriginal.segmento : "S/S", 
             prof: infoOriginal ? infoOriginal.prof : "Sem Prof."
         });
     });
 
     try {
-        const resposta = await fetch(URL, { 
-            method: 'POST', 
-            body: JSON.stringify({ alunos: dados }) 
-        });
+        const resposta = await fetch(URL, { method: 'POST', body: JSON.stringify({ alunos: dados }) });
         const resultado = await resposta.text();
         alert(resultado);
-    } catch (e) { 
-        alert("Erro ao salvar: " + e.message); 
-    }
+    } catch (e) { alert("Erro ao salvar: " + e.message); }
     
     btn.disabled = false; 
     btn.innerText = "Confirmar e Salvar no Sheets 📊";
@@ -392,6 +381,5 @@ document.getElementById("buscaNome").addEventListener("input", () => filtrar(fil
 atualizarPainel();
 setInterval(atualizarPainel, 30000);
 </script>
-
 </body>
 </html>
