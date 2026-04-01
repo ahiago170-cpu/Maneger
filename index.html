@@ -110,14 +110,14 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
   </div>
 
   <div class="lista" id="listaChamadaAlunos"></div>
-  
+  <div id="areaSeguranca" style="display:none; padding: 10px; background: #eee; border-radius: 5px; margin: 5px;">
+    <label style="font-size: 11px; font-weight: bold;">🔑 CÓD. ACESSO PROFESSOR:</label>
+    <input type="password" id="codProfessor" placeholder="Digite seu código..." 
+           style="width: 80%; padding: 5px; border-radius: 4px; border: 1px solid #ccc; text-align: center;">
+  </div>
   <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
 </div>
 
-  <div class="lista" id="listaChamadaAlunos"></div>
-  
-  <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
-</div>
 
   <div class="conteudoDireita">
     <div class="topo-container">
@@ -150,7 +150,8 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 </div>
 
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbzitzQt9xz4l49S_be97noAE483kICY1TDnn2HXIpUmcmUB58MuYDdpKbG13g1S12Ea/exec";
+let chaveCorretaDaTurma = ""; // Guarda o código 'chaves' da turma selecionada
+const URL = "https://script.google.com/macros/s/AKfycby-_1OSr5wVL8jOER0fHtbhpLpxG1pd5Yzuh4Js0VL48dYDmJ42vn72dh0CZmVmjjd9/exec";
 let alunosGlobal = [];
 let filtroAtual = "todos";
 
@@ -406,6 +407,7 @@ function gerarListaParaChamada() {
 // 2. Função que filtra os alunos finais baseada no nicho clicado
 function mostrarAlunosDaTurmaEspecifica(curso, dia, hora, serie) {
     const container = document.getElementById("listaChamadaAlunos");
+    const areaSeguranca = document.getElementById("areaSeguranca");
     container.innerHTML = "";
 
     const filtrados = alunosGlobal.filter(a => 
@@ -414,6 +416,12 @@ function mostrarAlunosDaTurmaEspecifica(curso, dia, hora, serie) {
         a.inicio === hora &&
         a.serie === serie
     );
+
+    if (filtrados.length > 0) {
+        // Pega o código 'chaves' do professor dessa turma específica
+        chaveCorretaDaTurma = filtrados[0].chaves; 
+        areaSeguranca.style.display = "block"; // Mostra o campo de senha
+    }
 
     filtrados.sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
         container.innerHTML += `
@@ -457,35 +465,23 @@ function renderizarChamadaFinal(curso, dia, horario, nomeTurma) {
 
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
+    const senhaDigitada = document.getElementById("codProfessor").value;
     const btn = document.getElementById("btnSalvar");
+
     if(!curso) return alert("Escolha o curso!");
     
+    // VALIDAÇÃO DO CÓDIGO DO PROFESSOR
+    if(senhaDigitada !== chaveCorretaDaTurma) {
+        alert("❌ CÓDIGO DE ACESSO INCORRETO!\nA chamada não pôde ser enviada.");
+        return;
+    }
+
     btn.disabled = true; 
     btn.innerText = "⏳ Enviando...";
 
-    let dados = [];
-    document.querySelectorAll(".sel-presenca").forEach(sel => {
-        const nomeAluno = sel.dataset.aluno;
-        const infoOriginal = alunosGlobal.find(a => a.aluno === nomeAluno);
-
-        dados.push({ 
-            nome: nomeAluno, 
-            presenca: sel.value, 
-            curso: curso,
-            data: new Date().toLocaleDateString('pt-BR'),
-            segmento: infoOriginal ? infoOriginal.segmento : "S/S", 
-            prof: infoOriginal ? infoOriginal.prof : "Sem Prof."
-        });
-    });
-
-    try {
-        const resposta = await fetch(URL, { method: 'POST', body: JSON.stringify({ alunos: dados }) });
-        const resultado = await resposta.text();
-        alert(resultado);
-    } catch (e) { alert("Erro ao salvar: " + e.message); }
-    
-    btn.disabled = false; 
-    btn.innerText = "Confirmar e Salvar no Sheets 📊";
+    // ... (restante do código de envio que você já tem)
+    // DICA: No final do seu try/catch, limpe o campo de senha:
+    // document.getElementById("codProfessor").value = "";
 }
 
 document.getElementById("buscaNome").addEventListener("input", () => filtrar(filtroAtual));
