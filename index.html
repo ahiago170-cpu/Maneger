@@ -6,6 +6,24 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
+.btn-nicho {
+    display: block;
+    width: 95%;
+    margin: 4px auto;
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: left;
+}
+/* Cores baseadas no seu exemplo */
+.nicho-seg { background-color: #ff9800; color: white; } /* Laranja */
+.nicho-ter { background-color: #e91e63; color: white; } /* Rosa */
+.nicho-sex { background-color: #00bcd4; color: white; } /* Azul */
+.nicho-padrao { background-color: #9e9e9e; color: white; }
+  
 /* ESTILOS MANTIDOS */
 .topo-container { display: flex; justify-content: center; align-items: flex-start; gap: 30px; }
 .imagem-lateral img { width: 250px; border: 2px solid #333; border-radius: 10px; }
@@ -84,15 +102,22 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
       <div class="lista" id="listaFiltro"></div>
     </div>
 
-    <div class="area area-chamada">
-      <div class="titulo">📋 Lista de Chamada</div>
-      <select id="escolherCurso" onchange="gerarListaParaChamada()" style="width: 90%; margin: 5px;">
-          <option value="">Escolha o curso...</option>
-      </select>
-      <div class="lista" id="listaChamadaAlunos"></div>
-      <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
-    </div>
+ <div class="area area-chamada">
+  <div class="titulo">📋 Lista de Chamada</div>
+  
+  <select id="escolherCurso" onchange="mostrarNichosDeTurmas()" style="width: 90%; margin: 5px;">
+      <option value="">Escolha o curso...</option>
+  </select>
+
+  <div id="containerNichos" style="display: none; padding: 5px; border-bottom: 1px solid #ccc; max-height: 150px; overflow-y: auto;">
+      <p style="font-size: 11px; margin: 2px;">Selecione a Turma:</p>
+      <div id="listaBotoesTurmas"></div>
   </div>
+
+  <div class="lista" id="listaChamadaAlunos"></div>
+  
+  <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
+</div>
 
   <div class="conteudoDireita">
     <div class="topo-container">
@@ -326,13 +351,83 @@ function abrirModal(dia, mes, ano, alunos) {
 
 function fecharModal() { document.getElementById("modal").style.display = "none"; }
 
-function gerarListaParaChamada() {
+// Variáveis para guardar o que foi selecionado no nicho
+let turmaSelecionadaFiltro = null;
+
+function mostrarNichosDeTurmas() {
     const curso = document.getElementById("escolherCurso").value;
+    const container = document.getElementById("containerNichos");
+    const listaBotoes = document.getElementById("listaBotoesTurmas");
+    const listaAlunosUI = document.getElementById("listaChamadaAlunos");
+
+    listaAlunosUI.innerHTML = ""; // Limpa a chamada ao trocar de curso
+    listaBotoes.innerHTML = "";
+    
+    if (!curso) {
+        container.style.display = "none";
+        return;
+    }
+
+    // 1. Filtrar alunos do curso e achar turmas ÚNICAS (Dia + Horário + Nome da Turma)
+    const alunosDoCurso = alunosGlobal.filter(a => a.curso === curso);
+    const turmasExistentes = [];
+    const controle = new Set();
+
+    alunosDoCurso.forEach(a => {
+        // Criamos uma chave única baseada no Dia, Horário de Início e Série (Turma)
+        const chave = `${a.diasSemana}-${a.inicio}-${a.serie}`;
+        if (!controle.has(chave) && a.diasSemana && a.inicio) {
+            controle.add(chave);
+            turmasExistentes.push({
+                dia: a.diasSemana,
+                horario: a.inicio,
+                fim: a.fim,
+                nomeTurma: a.serie || "Sem Nome"
+            });
+        }
+    });
+
+    // 2. Criar os botões de "Nicho"
+    if (turmasExistentes.length > 0) {
+        container.style.display = "block";
+        turmasExistentes.sort((a, b) => a.dia.localeCompare(b.dia)).forEach(t => {
+            const btn = document.createElement("button");
+            
+            // Define a cor baseada no dia (igual à sua foto)
+            let classeCor = "nicho-padrao";
+            if(t.dia.toLowerCase().includes("seg")) classeCor = "nicho-seg";
+            else if(t.dia.toLowerCase().includes("ter")) classeCor = "nicho-ter";
+            else if(t.dia.toLowerCase().includes("sex")) classeCor = "nicho-sex";
+
+            btn.className = `btn-nicho ${classeCor}`;
+            btn.innerHTML = `[${t.dia}] ${t.nomeTurma} <span style="float:right">${t.horario}</span>`;
+            
+            // Ao clicar, gera a chamada específica
+            btn.onclick = () => renderizarChamadaFinal(curso, t.dia, t.horario, t.nomeTurma);
+            listaBotoes.appendChild(btn);
+        });
+    } else {
+        container.style.display = "none";
+    }
+}
+
+function renderizarChamadaFinal(curso, dia, horario, nomeTurma) {
     const container = document.getElementById("listaChamadaAlunos");
-    container.innerHTML = "";
-    if(!curso) return;
-    alunosGlobal.filter(a => a.curso === curso).sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
-        // AJUSTE: SÉRIE NA LISTA DE CHAMADA
+    container.innerHTML = `<p style="font-size:12px; padding:5px; background:#fff3cd;"><b>Turma:</b> ${nomeTurma} (${dia} - ${horario})</p>`;
+
+    // Filtra alunos que batem com os 3 critérios: Curso E Dia E Horário
+    const alunosFiltrados = alunosGlobal.filter(a => 
+        a.curso === curso && 
+        a.diasSemana === dia && 
+        a.inicio === horario
+    );
+
+    if (alunosFiltrados.length === 0) {
+        container.innerHTML += "<p>Nenhum aluno nesta turma.</p>";
+        return;
+    }
+
+    alunosFiltrados.sort((a, b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
         container.innerHTML += `
             <div class="item-chamada">
                 <span><b>[${a.serie || 'S/S'}]</b> ${a.aluno}</span>
