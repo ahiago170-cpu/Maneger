@@ -18,8 +18,8 @@
     font-weight: bold;
 }
 .btn-nicho-turma:hover { background: #555; }
-.btn-nicho-turma.ativo { background: #28a745; } /* Fica verde quando selecionado */
-  
+.btn-nicho-turma.ativo { background: #28a745; }
+
 /* ESTILOS MANTIDOS */
 .topo-container { display: flex; justify-content: center; align-items: flex-start; gap: 30px; }
 .imagem-lateral img { width: 250px; border: 2px solid #333; border-radius: 10px; }
@@ -56,11 +56,15 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
   border: 3px solid #333; border-radius: 10px; background: white;
   position: relative; vertical-align: top;
 }
-.area-chamada { height: 400px; } 
+
+/* AJUSTE: Altura da chamada um pouco maior para caber a senha sem vazar */
+.area-chamada { height: 430px; } 
 
 .titulo { font-weight: bold; padding: 5px; background: #eee; }
 .lista { height: 240px; overflow-y: auto; text-align: left; padding: 5px; font-size: 14px; }
-#listaChamadaAlunos { height: 250px; }
+
+/* AJUSTE: Lista de alunos ligeiramente menor para encaixar a senha perfeitamente */
+#listaChamadaAlunos { height: 160px; }
 
 #calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 700px; margin: 20px auto; }
 .dia-cell { border: 1px solid #ccc; min-height: 70px; padding: 5px; text-align: left; background: #fdfdfd; position: relative; }
@@ -98,28 +102,28 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
       <div class="lista" id="listaFiltro"></div>
     </div>
 
-<div class="area area-chamada">
-  <div class="titulo">📋 Lista de Chamada</div>
-  
-  <select id="escolherCurso" onchange="gerarListaParaChamada()" style="width: 90%; margin: 5px;">
-      <option value="">Escolha o curso...</option>
-  </select>
+    <div class="area area-chamada">
+      <div class="titulo">📋 Lista de Chamada</div>
+      
+      <select id="escolherCurso" onchange="gerarListaParaChamada()" style="width: 90%; margin: 5px;">
+          <option value="">Escolha o curso...</option>
+      </select>
 
-  <div id="containerTurmasNicho" style="display:none; background:#f9f9f9; padding:5px; border-bottom:1px solid #ddd;">
-      <div id="botoesNichos" style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;"></div>
-  </div>
+      <div id="containerTurmasNicho" style="display:none; background:#f9f9f9; padding:5px; border-bottom:1px solid #ddd;">
+          <div id="botoesNichos" style="display: flex; flex-wrap: wrap; gap: 5px; justify-content: center;"></div>
+      </div>
 
-  <div class="lista" id="listaChamadaAlunos"></div>
-  <div id="areaSeguranca" style="display:none; padding: 10px; background: #eee; border-radius: 5px; margin: 5px;">
-    <label style="font-size: 11px; font-weight: bold;">🔑 CÓD. ACESSO PROFESSOR:</label>
-    <input type="password" id="codProfessor" placeholder="Digite seu código..." 
-           style="width: 80%; padding: 5px; border-radius: 4px; border: 1px solid #ccc; text-align: center;">
-  </div>
-  <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
-</div>
-
-
-  <div class="conteudoDireita">
+      <div class="lista" id="listaChamadaAlunos"></div>
+      
+      <div id="areaSeguranca" style="display:none; padding: 10px; background: #eee; border-radius: 5px; margin: 5px;">
+        <label style="font-size: 11px; font-weight: bold;">🔑 CÓD. ACESSO PROFESSOR:</label>
+        <input type="password" id="codProfessor" placeholder="Digite seu código..." 
+               style="width: 80%; padding: 5px; border-radius: 4px; border: 1px solid #ccc; text-align: center;">
+      </div>
+      
+      <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
+    </div>
+  </div> <div class="conteudoDireita">
     <div class="topo-container">
       <div id="calendario"></div>
       <div class="imagem-lateral">
@@ -155,13 +159,10 @@ const URL = "https://script.google.com/macros/s/AKfycby-_1OSr5wVL8jOER0fHtbhpLpx
 let alunosGlobal = [];
 let filtroAtual = "todos";
 
-// ---------------------------------------------------------
-// AJUSTE: VERIFICAÇÃO DA SÉRIE PARA MANDAR PRO PÁTIO
-// ---------------------------------------------------------
 function verificarProblemas(aluno) {
   let erros = [];
   if (!aluno.aluno) erros.push("❌ Nome");
-  if (!aluno.serie || aluno.serie.trim() === "") erros.push("❌ Série"); // Se não vier série, ERRO!
+  if (!aluno.serie || aluno.serie.trim() === "") erros.push("❌ Série");
   if (!aluno.curso) erros.push("❌ Curso");
   if (!aluno.segmento) erros.push("❌ Segmento");
   if (!aluno.dia && !aluno.diasSemana) erros.push("📅 Data/Semana");
@@ -180,7 +181,6 @@ async function atualizarPainel() {
       const erros = verificarProblemas(a);
       const div = document.createElement("div");
       div.className = "alunoErro";
-      // Exibe "Sem Série" se o campo estiver vazio
       div.innerHTML = `⚠️ [${a.serie || "S/S"}] ${a.aluno || "Sem Nome"} <small>${erros.join("<br>")}</small>`;
       patio.appendChild(div);
     });
@@ -209,13 +209,12 @@ function renderizarCaixasSegmentos() {
 
         let seg = (item.segmento || "").toLowerCase();
         let alunoNome = item.aluno || "Sem Nome";
-        let serie = item.serie || "S/S"; // Captura a série
+        let serie = item.serie || "S/S"; 
         let curso = item.curso || "S/C";
         let prof = item.prof || "Sem Prof.";
         let inicio = item.inicio ? item.inicio.substring(0,5) : "--:--";
         let fim = item.fim ? item.fim.substring(0,5) : "--:--";
 
-        // AJUSTE: SÉRIE NA FRENTE DO NOME
         let txtComum = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
                 👤 <b>[${serie}] ${alunoNome}</b> (${inicio}-${fim})<br>
@@ -263,7 +262,6 @@ function filtrar(tipo) {
     return bateTipo && bateBusca;
   });
 
-  // AJUSTE: SÉRIE NO FILTRO
   filtrados.forEach(a => listaFiltro.innerHTML += `👤 [${a.serie || 'S/S'}] ${a.aluno} (${a.curso || ''})<br>`);
   document.getElementById("nomeFiltro").innerText = tipo.toUpperCase();
   document.getElementById("qtdFiltro").innerText = filtrados.length;
@@ -343,7 +341,6 @@ function abrirModal(dia, mes, ano, alunos) {
     div.className="aluno " + (a.segmento||"").toLowerCase().replace("/","");
     div.style.marginBottom = "5px";
     div.style.padding = "5px";
-    // AJUSTE: SÉRIE NO MODAL
     div.innerHTML = `<b>[${a.serie || 'S/S'}] ${a.aluno}</b><br><small>${a.curso} (${a.inicio}-${a.fim})<br>Prof: ${a.prof || '---'}</small>`;
     lista.appendChild(div);
   });
@@ -352,34 +349,31 @@ function abrirModal(dia, mes, ano, alunos) {
 
 function fecharModal() { document.getElementById("modal").style.display = "none"; }
 
-// Variáveis para guardar o que foi selecionado no nicho
-let turmaSelecionadaFiltro = null;
-
-// 1. Função que identifica as turmas únicas e cria os botões (nichos)
 function gerarListaParaChamada() {
     const curso = document.getElementById("escolherCurso").value;
     const containerNichos = document.getElementById("containerTurmasNicho");
     const divBotoes = document.getElementById("botoesNichos");
     const listaAlunosUI = document.getElementById("listaChamadaAlunos");
+    const areaSeg = document.getElementById("areaSeguranca");
 
-    listaAlunosUI.innerHTML = ""; // Limpa a lista de alunos
-    divBotoes.innerHTML = "";     // Limpa os botões de turma
+    listaAlunosUI.innerHTML = ""; 
+    divBotoes.innerHTML = "";     
+    areaSeg.style.display = "none"; 
 
     if (!curso) {
         containerNichos.style.display = "none";
         return;
     }
 
-    // Filtrar turmas únicas (baseado em dia + horário + série)
     const alunosDoCurso = alunosGlobal.filter(a => a.curso === curso);
     const turmasUnicas = [];
     const controle = new Set();
 
     alunosDoCurso.forEach(a => {
-        const chave = `${a.diasSemana}-${a.inicio}-${a.serie}`;
-        if (!controle.has(chave) && a.diasSemana && a.inicio) {
-            controle.add(chave);
-            turmasUnicas.push({ dia: a.diasSemana, hora: a.inicio, serie: a.serie });
+        const chaveFiltro = `${a.diasSemana}-${a.inicio}-${a.serie}`;
+        if (!controle.has(chaveFiltro) && a.diasSemana && a.inicio) {
+            controle.add(chaveFiltro);
+            turmasUnicas.push({ dia: a.diasSemana, hora: a.inicio, serie: a.serie, senha: a.chaves });
         }
     });
 
@@ -390,10 +384,9 @@ function gerarListaParaChamada() {
             btn.className = "btn-nicho-turma";
             btn.innerText = `${t.serie} (${t.dia} - ${t.hora})`;
             btn.onclick = () => {
-                // Remove destaque de outros botões e coloca neste
                 document.querySelectorAll('.btn-nicho-turma').forEach(b => b.classList.remove('ativo'));
                 btn.classList.add('ativo');
-                // Chama a função que mostra os alunos dessa turma específica
+                chaveCorretaDaTurma = t.senha; 
                 mostrarAlunosDaTurmaEspecifica(curso, t.dia, t.hora, t.serie);
             };
             divBotoes.appendChild(btn);
@@ -404,24 +397,15 @@ function gerarListaParaChamada() {
     }
 }
 
-// 2. Função que filtra os alunos finais baseada no nicho clicado
 function mostrarAlunosDaTurmaEspecifica(curso, dia, hora, serie) {
     const container = document.getElementById("listaChamadaAlunos");
-    const areaSeguranca = document.getElementById("areaSeguranca");
+    const areaSeg = document.getElementById("areaSeguranca");
     container.innerHTML = "";
+    areaSeg.style.display = "block"; 
 
     const filtrados = alunosGlobal.filter(a => 
-        a.curso === curso && 
-        a.diasSemana === dia && 
-        a.inicio === hora &&
-        a.serie === serie
+        a.curso === curso && a.diasSemana === dia && a.inicio === hora && a.serie === serie
     );
-
-    if (filtrados.length > 0) {
-        // Pega o código 'chaves' do professor dessa turma específica
-        chaveCorretaDaTurma = filtrados[0].chaves; 
-        areaSeguranca.style.display = "block"; // Mostra o campo de senha
-    }
 
     filtrados.sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
         container.innerHTML += `
@@ -435,42 +419,15 @@ function mostrarAlunosDaTurmaEspecifica(curso, dia, hora, serie) {
     });
 }
 
-function renderizarChamadaFinal(curso, dia, horario, nomeTurma) {
-    const container = document.getElementById("listaChamadaAlunos");
-    container.innerHTML = `<p style="font-size:12px; padding:5px; background:#fff3cd;"><b>Turma:</b> ${nomeTurma} (${dia} - ${horario})</p>`;
-
-    // Filtra alunos que batem com os 3 critérios: Curso E Dia E Horário
-    const alunosFiltrados = alunosGlobal.filter(a => 
-        a.curso === curso && 
-        a.diasSemana === dia && 
-        a.inicio === horario
-    );
-
-    if (alunosFiltrados.length === 0) {
-        container.innerHTML += "<p>Nenhum aluno nesta turma.</p>";
-        return;
-    }
-
-    alunosFiltrados.sort((a, b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
-        container.innerHTML += `
-            <div class="item-chamada">
-                <span><b>[${a.serie || 'S/S'}]</b> ${a.aluno}</span>
-                <select class="sel-presenca" data-aluno="${a.aluno}">
-                    <option value="(V)">✅ (V)</option>
-                    <option value="(X)">❌ (X)</option>
-                </select>
-            </div>`;
-    });
-}
-
+// AJUSTE: O envio completo que estava faltando no seu código
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const senhaDigitada = document.getElementById("codProfessor").value;
     const btn = document.getElementById("btnSalvar");
 
     if(!curso) return alert("Escolha o curso!");
+    if(!chaveCorretaDaTurma) return alert("Selecione uma turma antes!");
     
-    // VALIDAÇÃO DO CÓDIGO DO PROFESSOR
     if(senhaDigitada !== chaveCorretaDaTurma) {
         alert("❌ CÓDIGO DE ACESSO INCORRETO!\nA chamada não pôde ser enviada.");
         return;
@@ -479,9 +436,29 @@ async function salvarRelatorioNoSheets() {
     btn.disabled = true; 
     btn.innerText = "⏳ Enviando...";
 
-    // ... (restante do código de envio que você já tem)
-    // DICA: No final do seu try/catch, limpe o campo de senha:
-    // document.getElementById("codProfessor").value = "";
+    let dados = [];
+    document.querySelectorAll(".sel-presenca").forEach(sel => {
+        const nomeAluno = sel.dataset.aluno;
+        const info = alunosGlobal.find(a => a.aluno === nomeAluno);
+        dados.push({ 
+            nome: nomeAluno, 
+            presenca: sel.value, 
+            curso: curso,
+            data: new Date().toLocaleDateString('pt-BR'),
+            segmento: info ? info.segmento : "S/S", 
+            prof: info ? info.prof : "Sem Prof."
+        });
+    });
+
+    try {
+        const resposta = await fetch(URL, { method: 'POST', body: JSON.stringify({ alunos: dados }) });
+        const resultado = await resposta.text();
+        alert(resultado);
+        document.getElementById("codProfessor").value = ""; 
+    } catch (e) { alert("Erro ao salvar: " + e.message); }
+    
+    btn.disabled = false; 
+    btn.innerText = "Confirmar e Salvar no Sheets 📊";
 }
 
 document.getElementById("buscaNome").addEventListener("input", () => filtrar(filtroAtual));
