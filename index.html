@@ -153,12 +153,23 @@ let filtroAtual = "todos";
 
 function verificarProblemas(aluno) {
   let erros = [];
-  if (!aluno.aluno) erros.push("❌ Nome");
+  
+  // Verificações básicas obrigatórias
+  if (!aluno.aluno || aluno.aluno.trim() === "") erros.push("❌ Nome");
   if (!aluno.serie || aluno.serie.trim() === "") erros.push("❌ Série");
-  if (!aluno.curso) erros.push("❌ Curso");
-  if (!aluno.segmento) erros.push("❌ Segmento");
-  if (!aluno.dia && !aluno.diasSemana) erros.push("📅 Data/Semana");
+  if (!aluno.curso || aluno.curso.trim() === "") erros.push("❌ Curso");
+  if (!aluno.segmento || aluno.segmento.trim() === "") erros.push("❌ Segmento");
   if (!aluno.inicio || !aluno.fim) erros.push("⏰ Horário");
+
+  // 🔥 LÓGICA DE DATA/SEMANA AJUSTADA:
+  // Só dá erro se AMBOS estiverem vazios. Se um deles existir, o aluno está OK.
+  const temDataFixa = aluno.dia && String(aluno.dia).trim() !== "";
+  const temDiaSemana = aluno.diasSemana && String(aluno.diasSemana).trim() !== "";
+
+  if (!temDataFixa && !temDiaSemana) {
+    erros.push("📅 Sem Data/Semana");
+  }
+
   return erros;
 }
 
