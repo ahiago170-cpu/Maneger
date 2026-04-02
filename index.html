@@ -46,10 +46,6 @@
 .fechar { cursor: pointer; float: right; font-weight: bold; }
 
 body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111; }
-.aluno.integral { background: #b9fbc0; }
-.aluno.extra { background: #a0c4ff; }
-.aluno.quadra { background: #fff3b0; }
-.aluno.lc { background: #e0aaff; }
 
 .area {
   display: inline-block; width: 260px; height: 300px; margin: 10px;
@@ -57,13 +53,11 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
   position: relative; vertical-align: top;
 }
 
-/* AJUSTE: Altura da chamada um pouco maior para caber a senha sem vazar */
 .area-chamada { height: 430px; } 
 
-.titulo { font-weight: bold; padding: 5px; background: #eee; }
+.titulo { font-weight: bold; padding: 5px; background: #eee; text-transform: capitalize; }
 .lista { height: 240px; overflow-y: auto; text-align: left; padding: 5px; font-size: 14px; }
 
-/* AJUSTE: Lista de alunos ligeiramente menor para encaixar a senha perfeitamente */
 #listaChamadaAlunos { height: 160px; }
 
 #calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 700px; margin: 20px auto; }
@@ -73,6 +67,9 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 
 .item-chamada { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 3px 0; }
 .btn-pdf { background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 90%; margin-top: 10px; }
+
+/* Botões de filtro gerados dinamicamente */
+.btn-filtro { margin: 2px; padding: 5px 10px; cursor: pointer; text-transform: capitalize; }
 </style>
 </head>
 
@@ -84,11 +81,7 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
   <input type="text" id="buscaNome" placeholder="🔍 Buscar aluno..." 
          style="padding:8px; width:200px; border-radius:8px; border:1px solid #ccc;">
   <br><br>
-  <button onclick="filtrar('todos')">Todos</button>
-  <button onclick="filtrar('integral')">Integral</button>
-  <button onclick="filtrar('extra')">Extra</button>
-  <button onclick="filtrar('quadra')">Quadra</button>
-  <button onclick="filtrar('l/c')">L/C</button>
+  <div id="containerBotoesFiltro"></div>
 </div>
 
 <p>Atualizado: <span id="hora"></span></p>
@@ -123,7 +116,8 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
       
       <button id="btnSalvar" class="btn-pdf" onclick="salvarRelatorioNoSheets()">Confirmar e Salvar no Sheets 📊</button>
     </div>
-  </div> <div class="conteudoDireita">
+  </div> 
+  <div class="conteudoDireita">
     <div class="topo-container">
       <div id="calendario"></div>
       <div class="imagem-lateral">
@@ -138,10 +132,8 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
   <div id="alunosErro"></div>
 </div>
 
-<div class="area"><div class="titulo">Integral</div><div class="lista" id="listaIntegral"></div></div>
-<div class="area"><div class="titulo">Extra</div><div class="lista" id="listaExtra"></div></div>
-<div class="area"><div class="titulo">Quadra</div><div class="lista" id="listaQuadra"></div></div>
-<div class="area"><div class="titulo">Lição de Casa</div><div class="lista" id="listaLC"></div></div>
+<div id="containerSegmentosDinamicos"></div>
+
 <div class="area"><div class="titulo">(Mês/dia)Curso</div><div class="lista" id="listaDia"></div></div>
 <div class="area"><div class="titulo">Resumo Geral</div><div class="lista" id="resumo"></div></div>
 
@@ -154,8 +146,8 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 </div>
 
 <script>
-let chaveCorretaDaTurma = ""; // Guarda o código 'chaves' da turma selecionada
-const URL = "https://script.google.com/macros/s/AKfycby-_1OSr5wVL8jOER0fHtbhpLpxG1pd5Yzuh4Js0VL48dYDmJ42vn72dh0CZmVmjjd9/exec";
+let chaveCorretaDaTurma = ""; 
+const URL = "https://script.google.com/macros/s/AKfycbxUaURRGyMcgKXIUDC0aTQ0XfJLOvWNrYb2i_bxOaJc9LruZPSsfGg50qj40xodk6kl/exec";
 let alunosGlobal = [];
 let filtroAtual = "todos";
 
@@ -201,13 +193,14 @@ async function atualizarPainel() {
 }
 
 function renderizarCaixasSegmentos() {
-    let int = [], ext = [], qua = [], lc = [], diaC = [];
+    let grupos = {}; // Objeto para separar os alunos por segmento dinamicamente
+    let diaC = [];   // Array para a caixa fixa de (Mês/dia)
     let totalErros = 0;
 
     alunosGlobal.forEach(item => {
         if (verificarProblemas(item).length > 0) totalErros++;
 
-        let seg = (item.segmento || "").toLowerCase();
+        let seg = (item.segmento || "Extra").trim(); // Pega o segmento da API
         let alunoNome = item.aluno || "Sem Nome";
         let serie = item.serie || "S/S"; 
         let curso = item.curso || "S/C";
@@ -221,11 +214,13 @@ function renderizarCaixasSegmentos() {
                 📘 ${curso} | 👨‍🏫 <b>${prof}</b>
             </div>`;
 
-        if(seg === "integral") int.push(txtComum);
-        else if(seg === "extra") ext.push(txtComum);
-        else if(seg === "quadra") qua.push(txtComum);
-        else if(seg === "l/c") lc.push(txtComum);
-        
+        // 1. Organiza os alunos por Segmento no objeto "grupos"
+        if (!grupos[seg]) {
+            grupos[seg] = []; // Se o segmento não existe no grupo, cria o array vazio
+        }
+        grupos[seg].push(txtComum);
+
+        // 2. Prepara os dados para a caixa fixa (Mês/dia)
         let dataExibicao = item.dia ? item.dia : (item.diasSemana || "---");
         let txtDia = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
@@ -235,18 +230,42 @@ function renderizarCaixasSegmentos() {
         diaC.push(txtDia);
     });
     
-    document.getElementById("listaIntegral").innerHTML = int.join("");
-    document.getElementById("listaExtra").innerHTML = ext.join("");
-    document.getElementById("listaQuadra").innerHTML = qua.join("");
-    document.getElementById("listaLC").innerHTML = lc.join("");
+    // ======== INJEÇÃO DINÂMICA DAS CAIXAS E BOTÕES ========
+    
+    const containerSegmentos = document.getElementById("containerSegmentosDinamicos");
+    const containerBotoes = document.getElementById("containerBotoesFiltro");
+    
+    containerSegmentos.innerHTML = ""; 
+    containerBotoes.innerHTML = `<button class="btn-filtro" onclick="filtrar('todos')">Todos</button>`;
+    
+    let textoResumo = `Total: ${alunosGlobal.length} alunos<br>`;
+
+    // Pega todos os nomes de segmentos encontrados e cria as caixas
+    Object.keys(grupos).sort().forEach(nomeSegmento => {
+        let alunosDoSegmento = grupos[nomeSegmento];
+        
+        // Cria a caixa no HTML
+        containerSegmentos.innerHTML += `
+        <div class="area">
+            <div class="titulo">${nomeSegmento}</div>
+            <div class="lista">${alunosDoSegmento.join("")}</div>
+        </div>`;
+        
+        // Cria o botão de filtro correspondente
+        containerBotoes.innerHTML += `<button class="btn-filtro" onclick="filtrar('${nomeSegmento.toLowerCase()}')">${nomeSegmento}</button>`;
+        
+        // Adiciona a contagem desse segmento no resumo
+        textoResumo += `${nomeSegmento}: ${alunosDoSegmento.length} | `;
+    });
+
+    // ======== ATUALIZAÇÃO DAS CAIXAS FIXAS ========
+    
     document.getElementById("listaDia").innerHTML = diaC.join("");
     
     document.getElementById("resumo").innerHTML = `
-        <div style="text-align:left; font-size:14px;">
-            Total: ${alunosGlobal.length} alunos<br>
-            Int: ${int.length} | Ext: ${ext.length}<br>
-            Qua: ${qua.length} | L/C: ${lc.length}<br>
-            <strong style="color:red;">🚨 Pátio: ${totalErros}</strong>
+        <div style="text-align:left; font-size:14px; line-height: 1.5;">
+            ${textoResumo}<br>
+            <strong style="color:red; font-size: 16px;">🚨 Pátio: ${totalErros}</strong>
         </div>`;
 }
 
@@ -257,7 +276,8 @@ function filtrar(tipo) {
   listaFiltro.innerHTML = "";
 
   const filtrados = alunosGlobal.filter(a => {
-    const bateTipo = (tipo === "todos") || ((a.segmento || "").toLowerCase() === tipo);
+    const segAluno = (a.segmento || "").toLowerCase();
+    const bateTipo = (tipo === "todos") || (segAluno === tipo);
     const bateBusca = (a.aluno || "").toLowerCase().includes(busca);
     return bateTipo && bateBusca;
   });
@@ -419,7 +439,6 @@ function mostrarAlunosDaTurmaEspecifica(curso, dia, hora, serie) {
     });
 }
 
-// AJUSTE: O envio completo que estava faltando no seu código
 async function salvarRelatorioNoSheets() {
     const curso = document.getElementById("escolherCurso").value;
     const senhaDigitada = document.getElementById("codProfessor").value;
