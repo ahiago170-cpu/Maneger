@@ -165,8 +165,26 @@ function verificarProblemas(aluno) {
 async function atualizarPainel() {
   try {
     const resposta = await fetch(URL);
-    alunosGlobal = await resposta.json();
+    const dadosBrutos = await resposta.json();
     
+    // 🛑 FILTRO ANTI-FANTASMA: Remove lixo da planilha
+    alunosGlobal = dadosBrutos.filter(a => {
+        let nome = (a.aluno || "").trim().toLowerCase();
+        
+        // 1. Ignora linhas de cabeçalho ou erros clássicos do Excel/Sheets
+        if (nome === "" || nome === "#n/a" || nome === "#ref!" || nome === "aluno" || nome === "nome") return false;
+        
+        // 2. Se a linha não tem curso, não tem série e não tem hora, é 100% lixo/linha vazia
+        let temCurso = a.curso && a.curso.trim() !== "";
+        let temSerie = a.serie && a.serie.trim() !== "";
+        let temHora = a.inicio && a.inicio.trim() !== "";
+        
+        if (!temCurso && !temSerie && !temHora) return false;
+        
+        return true; // Se passou pelos testes, é um aluno real!
+    });
+    
+    // Agora o Pátio só processa os alunos reais que passaram no filtro
     const patio = document.getElementById("alunosErro");
     patio.innerHTML = "";
     alunosGlobal.filter(a => verificarProblemas(a).length > 0).forEach(a => {
@@ -189,7 +207,7 @@ async function atualizarPainel() {
 
     const agora = new Date();
     document.getElementById("hora").innerText = agora.getHours() + ":" + String(agora.getMinutes()).padStart(2,'0');
-  } catch (e) { console.error(e); }
+  } catch (e) { console.error("Erro ao atualizar o painel: ", e); }
 }
 
 function renderizarCaixasSegmentos() {
