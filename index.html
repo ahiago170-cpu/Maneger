@@ -452,7 +452,7 @@ function mostrarAlunosDaTurmaEspecifica(curso, dia, hora, serie) {
 
     filtrados.sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
         // 🔥 LÓGICA DA CHAMADA PRÉ-PREENCHIDA: Lê o 'p' ou 'vazio' da API
-        const isPresente = (a.presente && a.presente.trim().toLowerCase() === "p");
+        const isPresente = (a.presente && a.presente.trim().toLowerCase() === "v");
         const selecaoV = isPresente ? "selected" : "";
         const selecaoX = !isPresente ? "selected" : "";
 
@@ -476,7 +476,8 @@ function renderizarMicrosSalas() {
     
     containerSalas.innerHTML = "";
 
-    const presentes = alunosGlobal.filter(a => a.presente && a.presente.trim().toLowerCase() === 'p');
+    // Filtra apenas quem está com o status exato de (V)
+    const presentes = alunosGlobal.filter(a => a.presente && a.presente.trim() === '(V)');
 
     if (presentes.length === 0) {
         containerMaster.style.display = "none";
@@ -493,7 +494,9 @@ function renderizarMicrosSalas() {
     });
 
     Object.keys(salas).sort().forEach(sala => {
-        let alunosHtml = salas[sala].map(nome => `<div style="font-size:11px; padding:3px 0; border-bottom: 1px dashed #ddd;">✅ ${nome}</div>`).join('');
+        let alunosHtml = salas[sala].map(nome => `
+            <div style="font-size:11px; padding:3px 0; border-bottom: 1px dashed #ddd;">✅ ${nome}</div>
+        `).join('');
         
         containerSalas.innerHTML += `
             <div class="area" style="width: 140px; height: auto; min-height: 80px; margin: 5px; border-color: #28a745;">
@@ -509,11 +512,12 @@ function renderizarMicrosSalas() {
 // 🔥 FUNÇÃO: Atualiza a sala instantaneamente quando o professor muda o Select
 function atualizarPresencaLocal(selectElement) {
     const nomeAluno = selectElement.dataset.aluno;
-    const novoValor = selectElement.value;
+    const novoValor = selectElement.value; // Pega "(V)" ou "(X)"
     
     let alunoObj = alunosGlobal.find(a => a.aluno === nomeAluno);
     if (alunoObj) {
-        alunoObj.presente = (novoValor === "(V)") ? "p" : "";
+        // Se for (V), mantém. Se for qualquer outra coisa (X ou vazio), remove.
+        alunoObj.presente = (novoValor === "(V)") ? "(V)" : "";
         renderizarMicrosSalas(); 
     }
 }
