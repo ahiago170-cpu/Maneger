@@ -120,8 +120,16 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
   <div class="conteudoDireita">
     <div class="topo-container">
       <div id="calendario"></div>
-      <div class="imagem-lateral">
-        <img src="tabela.png" alt="Tabela de Segmentos">
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="imagem-lateral">
+          <img src="tabela.png" alt="Tabela de Segmentos">
+        </div>
+        
+        <div id="areaMicrosSalas" style="background: #fff; border: 2px solid #ccc; border-radius: 10px; padding: 10px; margin-top: 10px; display: none;">
+            <h3 style="margin: 0 0 10px 0; font-size: 14px; background: #28a745; color: white; padding: 5px; border-radius: 5px;">🏫 Alunos Presentes Agora</h3>
+            <div id="microsSalasLaterais" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;"></div>
+        </div>
+        
       </div>
     </div>
   </div>
@@ -147,7 +155,7 @@ body { font-family: Arial; text-align: center; background: #f5f5f5; color: #111;
 
 <script>
 let chaveCorretaDaTurma = ""; 
-const URL = "https://script.google.com/macros/s/AKfycbwZtDh8UqJdljNXl0kkovTYOYCKsh5d_mCO-73vM98IZp6y4finF0Ci_lsUH35u-48L/exec";
+const URL = "https://script.google.com/macros/library/d/13zn9jYNw4bUOl6sjqFDo3i4vKYAvuH2Imv2VrnEDenY62YJV1DM5XMR9/80";
 let alunosGlobal = [];
 let filtroAtual = "todos";
 
@@ -161,8 +169,7 @@ function verificarProblemas(aluno) {
   if (!aluno.segmento || aluno.segmento.trim() === "") erros.push("❌ Segmento");
   if (!aluno.inicio || !aluno.fim) erros.push("⏰ Horário");
 
-  // 🔥 LÓGICA DE DATA/SEMANA AJUSTADA:
-  // Só dá erro se AMBOS estiverem vazios. Se um deles existir, o aluno está OK.
+  // LÓGICA DE DATA/SEMANA AJUSTADA
   const temDataFixa = aluno.dia && String(aluno.dia).trim() !== "";
   const temDiaSemana = aluno.diasSemana && String(aluno.diasSemana).trim() !== "";
 
@@ -182,7 +189,7 @@ async function atualizarPainel() {
     alunosGlobal = dadosBrutos.filter(a => {
         let nome = (a.aluno || "").trim().toLowerCase();
         
-        // 1. Ignora linhas de cabeçalho ou erros clássicos do Excel/Sheets
+        // 1. Ignora linhas de cabeçalho ou erros clássicos
         if (nome === "" || nome === "#n/a" || nome === "#ref!" || nome === "aluno" || nome === "nome") return false;
         
         // 2. Se a linha não tem curso, não tem série e não tem hora, é 100% lixo/linha vazia
@@ -192,10 +199,9 @@ async function atualizarPainel() {
         
         if (!temCurso && !temSerie && !temHora) return false;
         
-        return true; // Se passou pelos testes, é um aluno real!
+        return true; 
     });
     
-    // Agora o Pátio só processa os alunos reais que passaram no filtro
     const patio = document.getElementById("alunosErro");
     patio.innerHTML = "";
     alunosGlobal.filter(a => verificarProblemas(a).length > 0).forEach(a => {
@@ -215,6 +221,7 @@ async function atualizarPainel() {
 
     renderizarCaixasSegmentos();
     filtrar(filtroAtual);
+    renderizarMicrosSalas(); // Atualiza as salas dinâmicas a cada recarregamento
 
     const agora = new Date();
     document.getElementById("hora").innerText = agora.getHours() + ":" + String(agora.getMinutes()).padStart(2,'0');
@@ -222,14 +229,14 @@ async function atualizarPainel() {
 }
 
 function renderizarCaixasSegmentos() {
-    let grupos = {}; // Objeto para separar os alunos por segmento dinamicamente
-    let diaC = [];   // Array para a caixa fixa de (Mês/dia)
+    let grupos = {}; 
+    let diaC = [];   
     let totalErros = 0;
 
     alunosGlobal.forEach(item => {
         if (verificarProblemas(item).length > 0) totalErros++;
 
-        let seg = (item.segmento || "Extra").trim(); // Pega o segmento da API
+        let seg = (item.segmento || "Extra").trim();
         let alunoNome = item.aluno || "Sem Nome";
         let serie = item.serie || "S/S"; 
         let curso = item.curso || "S/C";
@@ -243,13 +250,9 @@ function renderizarCaixasSegmentos() {
                 📘 ${curso} | 👨‍🏫 <b>${prof}</b>
             </div>`;
 
-        // 1. Organiza os alunos por Segmento no objeto "grupos"
-        if (!grupos[seg]) {
-            grupos[seg] = []; // Se o segmento não existe no grupo, cria o array vazio
-        }
+        if (!grupos[seg]) { grupos[seg] = []; }
         grupos[seg].push(txtComum);
 
-        // 2. Prepara os dados para a caixa fixa (Mês/dia)
         let dataExibicao = item.dia ? item.dia : (item.diasSemana || "---");
         let txtDia = `
             <div style="margin-bottom: 8px; border-bottom: 1px dashed #ccc; padding-bottom: 4px;">
@@ -259,8 +262,6 @@ function renderizarCaixasSegmentos() {
         diaC.push(txtDia);
     });
     
-    // ======== INJEÇÃO DINÂMICA DAS CAIXAS E BOTÕES ========
-    
     const containerSegmentos = document.getElementById("containerSegmentosDinamicos");
     const containerBotoes = document.getElementById("containerBotoesFiltro");
     
@@ -269,26 +270,19 @@ function renderizarCaixasSegmentos() {
     
     let textoResumo = `Total: ${alunosGlobal.length} alunos<br>`;
 
-    // Pega todos os nomes de segmentos encontrados e cria as caixas
     Object.keys(grupos).sort().forEach(nomeSegmento => {
         let alunosDoSegmento = grupos[nomeSegmento];
         
-        // Cria a caixa no HTML
         containerSegmentos.innerHTML += `
         <div class="area">
             <div class="titulo">${nomeSegmento}</div>
             <div class="lista">${alunosDoSegmento.join("")}</div>
         </div>`;
         
-        // Cria o botão de filtro correspondente
         containerBotoes.innerHTML += `<button class="btn-filtro" onclick="filtrar('${nomeSegmento.toLowerCase()}')">${nomeSegmento}</button>`;
-        
-        // Adiciona a contagem desse segmento no resumo
         textoResumo += `${nomeSegmento}: ${alunosDoSegmento.length} | `;
     });
 
-    // ======== ATUALIZAÇÃO DAS CAIXAS FIXAS ========
-    
     document.getElementById("listaDia").innerHTML = diaC.join("");
     
     document.getElementById("resumo").innerHTML = `
@@ -457,15 +451,71 @@ function mostrarAlunosDaTurmaEspecifica(curso, dia, hora, serie) {
     );
 
     filtrados.sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
+        // 🔥 LÓGICA DA CHAMADA PRÉ-PREENCHIDA: Lê o 'p' ou 'vazio' da API
+        const isPresente = (a.presente && a.presente.trim().toLowerCase() === "p");
+        const selecaoV = isPresente ? "selected" : "";
+        const selecaoX = !isPresente ? "selected" : "";
+
+        // Adicionado onchange="atualizarPresencaLocal(this)"
         container.innerHTML += `
             <div class="item-chamada">
                 <span><b>[${a.serie || 'S/S'}]</b> ${a.aluno}</span>
-                <select class="sel-presenca" data-aluno="${a.aluno}">
-                    <option value="(V)">✅ (V)</option>
-                    <option value="(X)">❌ (X)</option>
+                <select class="sel-presenca" data-aluno="${a.aluno}" onchange="atualizarPresencaLocal(this)">
+                    <option value="(V)" ${selecaoV}>✅ (V)</option>
+                    <option value="(X)" ${selecaoX}>❌ (X)</option>
                 </select>
             </div>`;
     });
+}
+
+// 🔥 FUNÇÃO: Redesenha as salinhas baseado em quem está com "p"
+function renderizarMicrosSalas() {
+    const containerMaster = document.getElementById("areaMicrosSalas");
+    const containerSalas = document.getElementById("microsSalasLaterais");
+    if (!containerSalas) return;
+    
+    containerSalas.innerHTML = "";
+
+    const presentes = alunosGlobal.filter(a => a.presente && a.presente.trim().toLowerCase() === 'p');
+
+    if (presentes.length === 0) {
+        containerMaster.style.display = "none";
+        return;
+    }
+
+    containerMaster.style.display = "block";
+
+    let salas = {};
+    presentes.forEach(a => {
+        let nomeSala = a.serie || a.curso || "Geral";
+        if (!salas[nomeSala]) salas[nomeSala] = [];
+        salas[nomeSala].push(a.aluno);
+    });
+
+    Object.keys(salas).sort().forEach(sala => {
+        let alunosHtml = salas[sala].map(nome => `<div style="font-size:11px; padding:3px 0; border-bottom: 1px dashed #ddd;">✅ ${nome}</div>`).join('');
+        
+        containerSalas.innerHTML += `
+            <div class="area" style="width: 140px; height: auto; min-height: 80px; margin: 5px; border-color: #28a745;">
+                <div class="titulo" style="background: #d4edda; color: #155724; font-size: 12px; font-weight: bold;">🚪 ${sala}</div>
+                <div class="lista" style="height: auto; max-height: 150px; overflow-y: auto;">
+                    ${alunosHtml}
+                </div>
+            </div>
+        `;
+    });
+}
+
+// 🔥 FUNÇÃO: Atualiza a sala instantaneamente quando o professor muda o Select
+function atualizarPresencaLocal(selectElement) {
+    const nomeAluno = selectElement.dataset.aluno;
+    const novoValor = selectElement.value;
+    
+    let alunoObj = alunosGlobal.find(a => a.aluno === nomeAluno);
+    if (alunoObj) {
+        alunoObj.presente = (novoValor === "(V)") ? "p" : "";
+        renderizarMicrosSalas(); 
+    }
 }
 
 async function salvarRelatorioNoSheets() {
