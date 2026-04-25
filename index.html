@@ -451,21 +451,22 @@ function mostrarAlunosDaTurmaEspecifica(curso, dia, hora, serie) {
     );
 
     filtrados.sort((a,b) => a.aluno.localeCompare(b.aluno)).forEach(a => {
-        // 🔥 LÓGICA DA CHAMADA PRÉ-PREENCHIDA: Lê o 'p' ou 'vazio' da API
-        const isPresente = (a.presente && a.presente.trim().toLowerCase() === "v");
-        const selecaoV = isPresente ? "selected" : "";
-        const selecaoX = !isPresente ? "selected" : "";
+    // Agora verifica apenas se é "V" (maiúsculo ou minúsculo)
+    const statusPresente = (a.presente || "").trim().toUpperCase();
+    const isPresente = statusPresente === "V";
+    
+    const selecaoV = isPresente ? "selected" : "";
+    const selecaoX = !isPresente ? "selected" : "";
 
-        // Adicionado onchange="atualizarPresencaLocal(this)"
-        container.innerHTML += `
-            <div class="item-chamada">
-                <span><b>[${a.serie || 'S/S'}]</b> ${a.aluno}</span>
-                <select class="sel-presenca" data-aluno="${a.aluno}" onchange="atualizarPresencaLocal(this)">
-                    <option value="(V)" ${selecaoV}>✅ (V)</option>
-                    <option value="(X)" ${selecaoX}>❌ (X)</option>
-                </select>
-            </div>`;
-    });
+    container.innerHTML += `
+        <div class="item-chamada">
+            <span><b>[${a.serie || 'S/S'}]</b> ${a.aluno}</span>
+            <select class="sel-presenca" data-aluno="${a.aluno}" onchange="atualizarPresencaLocal(this)">
+                <option value="V" ${selecaoV}>✅ (V)</option>
+                <option value="X" ${selecaoX}>❌ (X)</option>
+            </select>
+        </div>`;
+});
 }
 
 // 🔥 FUNÇÃO: Redesenha as salinhas baseado em quem está com "p"
@@ -476,8 +477,8 @@ function renderizarMicrosSalas() {
     
     containerSalas.innerHTML = "";
 
-    // Filtra apenas quem está com o status exato de (V)
-    const presentes = alunosGlobal.filter(a => a.presente && a.presente.trim() === '(V)');
+    // Filtra quem tem "V" na planilha
+    const presentes = alunosGlobal.filter(a => (a.presente || "").trim().toUpperCase() === 'V');
 
     if (presentes.length === 0) {
         containerMaster.style.display = "none";
@@ -494,9 +495,7 @@ function renderizarMicrosSalas() {
     });
 
     Object.keys(salas).sort().forEach(sala => {
-        let alunosHtml = salas[sala].map(nome => `
-            <div style="font-size:11px; padding:3px 0; border-bottom: 1px dashed #ddd;">✅ ${nome}</div>
-        `).join('');
+        let alunosHtml = salas[sala].map(nome => `<div style="font-size:11px; padding:3px 0; border-bottom: 1px dashed #ddd;">✅ ${nome}</div>`).join('');
         
         containerSalas.innerHTML += `
             <div class="area" style="width: 140px; height: auto; min-height: 80px; margin: 5px; border-color: #28a745;">
@@ -504,20 +503,19 @@ function renderizarMicrosSalas() {
                 <div class="lista" style="height: auto; max-height: 150px; overflow-y: auto;">
                     ${alunosHtml}
                 </div>
-            </div>
-        `;
+            </div>`;
     });
 }
 
 // 🔥 FUNÇÃO: Atualiza a sala instantaneamente quando o professor muda o Select
 function atualizarPresencaLocal(selectElement) {
     const nomeAluno = selectElement.dataset.aluno;
-    const novoValor = selectElement.value; // Pega "(V)" ou "(X)"
+    const novoValor = selectElement.value; // Recebe "V" ou "X"
     
     let alunoObj = alunosGlobal.find(a => a.aluno === nomeAluno);
     if (alunoObj) {
-        // Se for (V), mantém. Se for qualquer outra coisa (X ou vazio), remove.
-        alunoObj.presente = (novoValor === "(V)") ? "(V)" : "";
+        // Se o professor marcar "V", atualiza o objeto e a salinha aparece
+        alunoObj.presente = (novoValor === "V") ? "V" : "X";
         renderizarMicrosSalas(); 
     }
 }
